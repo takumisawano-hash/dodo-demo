@@ -1,0 +1,421 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import StatCard from '../components/StatCard';
+import SimpleChart from '../components/SimpleChart';
+
+// Agent data matching HomeScreen
+const AGENTS = [
+  { id: 'diet-coach', name: 'ドードー', emoji: '🦤', color: '#FF9800', bgColor: '#FFF3E0' },
+  { id: 'language-tutor', name: 'ポリー', emoji: '🦜', color: '#81C784', bgColor: '#E8F5E9' },
+  { id: 'habit-coach', name: 'オウル', emoji: '🦉', color: '#BA68C8', bgColor: '#F3E5F5' },
+];
+
+// Mock data
+const WEEKLY_DATA = [
+  { label: '月', value: 5 },
+  { label: '火', value: 8 },
+  { label: '水', value: 3 },
+  { label: '木', value: 12 },
+  { label: '金', value: 7 },
+  { label: '土', value: 15 },
+  { label: '日', value: 9 },
+];
+
+const AGENT_STATS = [
+  { id: 'diet-coach', sessions: 23, messages: 156, streak: 7 },
+  { id: 'language-tutor', sessions: 15, messages: 89, streak: 3 },
+  { id: 'habit-coach', sessions: 31, messages: 203, streak: 12 },
+];
+
+const GOALS = [
+  { label: '週間目標（5セッション）', value: 80 },
+  { label: '月間目標（30セッション）', value: 65 },
+  { label: '習慣達成率', value: 73 },
+];
+
+const BADGES = [
+  { id: '1', emoji: '🔥', name: '7日連続', achieved: true },
+  { id: '2', emoji: '💯', name: '100メッセージ', achieved: true },
+  { id: '3', emoji: '🌟', name: 'オールスター', achieved: false },
+  { id: '4', emoji: '🏆', name: '30日マスター', achieved: false },
+  { id: '5', emoji: '🚀', name: 'ロケットスタート', achieved: true },
+  { id: '6', emoji: '🎯', name: '目標達成', achieved: true },
+];
+
+type Period = 'week' | 'month';
+
+export default function ProgressScreen() {
+  const [period, setPeriod] = useState<Period>('week');
+
+  const getAgentById = (id: string) => AGENTS.find((a) => a.id === id);
+
+  const totalSessions = AGENT_STATS.reduce((sum, a) => sum + a.sessions, 0);
+  const totalMessages = AGENT_STATS.reduce((sum, a) => sum + a.messages, 0);
+  const maxStreak = Math.max(...AGENT_STATS.map((a) => a.streak));
+  const achievedBadges = BADGES.filter((b) => b.achieved).length;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>📊 進捗レポート</Text>
+        <View style={styles.periodToggle}>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              period === 'week' && styles.periodButtonActive,
+            ]}
+            onPress={() => setPeriod('week')}
+          >
+            <Text
+              style={[
+                styles.periodText,
+                period === 'week' && styles.periodTextActive,
+              ]}
+            >
+              今週
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              period === 'month' && styles.periodButtonActive,
+            ]}
+            onPress={() => setPeriod('month')}
+          >
+            <Text
+              style={[
+                styles.periodText,
+                period === 'month' && styles.periodTextActive,
+              ]}
+            >
+              今月
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Summary Stats */}
+        <Text style={styles.sectionTitle}>📈 サマリー</Text>
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="セッション"
+            value={totalSessions}
+            subtitle={period === 'week' ? '今週' : '今月'}
+            icon="💬"
+            color="#FF9800"
+            bgColor="#FFF3E0"
+            trend="up"
+            trendValue="+23%"
+          />
+          <StatCard
+            title="メッセージ"
+            value={totalMessages}
+            subtitle="合計"
+            icon="✉️"
+            color="#81C784"
+            bgColor="#E8F5E9"
+            trend="up"
+            trendValue="+15%"
+          />
+        </View>
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="最長ストリーク"
+            value={`${maxStreak}日`}
+            icon="🔥"
+            color="#FF7043"
+            bgColor="#FBE9E7"
+            trend="neutral"
+            trendValue="継続中"
+          />
+          <StatCard
+            title="バッジ獲得"
+            value={`${achievedBadges}/${BADGES.length}`}
+            icon="🏅"
+            color="#FFB300"
+            bgColor="#FFF8E1"
+          />
+        </View>
+
+        {/* Weekly Activity Chart */}
+        <Text style={styles.sectionTitle}>📅 今週の活動</Text>
+        <View style={styles.chartCard}>
+          <SimpleChart data={WEEKLY_DATA} color="#FF9800" height={100} />
+        </View>
+
+        {/* Agent Stats */}
+        <Text style={styles.sectionTitle}>🐦 エージェント別</Text>
+        {AGENT_STATS.map((stat) => {
+          const agent = getAgentById(stat.id);
+          if (!agent) return null;
+          return (
+            <View
+              key={stat.id}
+              style={[styles.agentCard, { backgroundColor: agent.bgColor }]}
+            >
+              <View style={styles.agentHeader}>
+                <Text style={styles.agentEmoji}>{agent.emoji}</Text>
+                <View style={styles.agentInfo}>
+                  <Text style={[styles.agentName, { color: agent.color }]}>
+                    {agent.name}
+                  </Text>
+                  <View style={styles.agentMeta}>
+                    <Text style={styles.agentStat}>
+                      💬 {stat.sessions}回 · ✉️ {stat.messages}件
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.streakBadge}>
+                  <Text style={styles.streakText}>🔥 {stat.streak}</Text>
+                </View>
+              </View>
+            </View>
+          );
+        })}
+
+        {/* Goals Progress */}
+        <Text style={styles.sectionTitle}>🎯 目標達成率</Text>
+        <View style={styles.goalsCard}>
+          <SimpleChart data={GOALS} color="#BA68C8" type="progress" />
+        </View>
+
+        {/* Badges */}
+        <Text style={styles.sectionTitle}>🏆 バッジコレクション</Text>
+        <View style={styles.badgesGrid}>
+          {BADGES.map((badge) => (
+            <View
+              key={badge.id}
+              style={[
+                styles.badgeItem,
+                !badge.achieved && styles.badgeItemLocked,
+              ]}
+            >
+              <Text style={[styles.badgeEmoji, !badge.achieved && styles.badgeEmojiLocked]}>
+                {badge.emoji}
+              </Text>
+              <Text style={[styles.badgeName, !badge.achieved && styles.badgeNameLocked]}>
+                {badge.name}
+              </Text>
+              {!badge.achieved && (
+                <Text style={styles.badgeLockIcon}>🔒</Text>
+              )}
+            </View>
+          ))}
+        </View>
+
+        {/* Motivation */}
+        <View style={styles.motivationCard}>
+          <Text style={styles.motivationEmoji}>💪</Text>
+          <Text style={styles.motivationText}>
+            素晴らしい調子です！{'\n'}
+            この調子で続けましょう！
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  periodToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#E0E0E0',
+    borderRadius: 20,
+    padding: 3,
+  },
+  periodButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 17,
+  },
+  periodButtonActive: {
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  periodText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  periodTextActive: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  chartCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  agentCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  agentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  agentEmoji: {
+    fontSize: 36,
+    marginRight: 12,
+  },
+  agentInfo: {
+    flex: 1,
+  },
+  agentName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  agentMeta: {
+    marginTop: 4,
+  },
+  agentStat: {
+    fontSize: 13,
+    color: '#666',
+  },
+  streakBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  streakText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E65100',
+  },
+  goalsCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  badgesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  badgeItem: {
+    width: '30%',
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+    position: 'relative',
+  },
+  badgeItemLocked: {
+    backgroundColor: '#F5F5F5',
+  },
+  badgeEmoji: {
+    fontSize: 28,
+    marginBottom: 6,
+  },
+  badgeEmojiLocked: {
+    opacity: 0.4,
+  },
+  badgeName: {
+    fontSize: 11,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  badgeNameLocked: {
+    color: '#999',
+  },
+  badgeLockIcon: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    fontSize: 10,
+  },
+  motivationCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  motivationEmoji: {
+    fontSize: 40,
+    marginRight: 16,
+  },
+  motivationText: {
+    fontSize: 16,
+    color: '#2E7D32',
+    fontWeight: '600',
+    lineHeight: 24,
+    flex: 1,
+  },
+});

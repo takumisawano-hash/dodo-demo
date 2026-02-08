@@ -1,0 +1,338 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+interface Props {
+  navigation: any;
+}
+
+export default function ForgotPasswordScreen({ navigation }: Props) {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const validateEmail = () => {
+    if (!email) {
+      setError('メールアドレスを入力してください');
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('有効なメールアドレスを入力してください');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (validateEmail()) {
+      // TODO: 実際のパスワードリセット処理
+      console.log('Password reset for:', email);
+      setIsSubmitted(true);
+    }
+  };
+
+  const handleResend = () => {
+    // TODO: 再送信処理
+    console.log('Resend password reset email');
+  };
+
+  if (isSubmitted) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.successContainer}>
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>← 戻る</Text>
+          </TouchableOpacity>
+
+          <View style={styles.successContent}>
+            <Text style={styles.successEmoji}>📧</Text>
+            <Text style={styles.successTitle}>メールを送信しました</Text>
+            <Text style={styles.successMessage}>
+              {email} に{'\n'}
+              パスワードリセットのリンクを送信しました。{'\n'}
+              メールをご確認ください。
+            </Text>
+
+            <TouchableOpacity 
+              style={styles.resendButton}
+              onPress={handleResend}
+            >
+              <Text style={styles.resendButtonText}>メールが届かない場合は再送信</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.backToLoginButton}
+              onPress={() => navigation.navigate('Login')}
+            >
+              <Text style={styles.backToLoginText}>ログイン画面に戻る</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>← 戻る</Text>
+          </TouchableOpacity>
+
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.logo}>🦤</Text>
+            <Text style={styles.title}>パスワードをリセット</Text>
+            <Text style={styles.subtitle}>
+              アカウントに登録されているメールアドレスを入力してください。{'\n'}
+              パスワードリセットのリンクをお送りします。
+            </Text>
+          </View>
+
+          {/* Form */}
+          <View style={styles.form}>
+            {/* Email Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>メールアドレス</Text>
+              <TextInput
+                style={[styles.input, error && styles.inputError]}
+                placeholder="example@email.com"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (error) setError('');
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>リセットリンクを送信</Text>
+            </TouchableOpacity>
+
+            {/* Info */}
+            <View style={styles.infoContainer}>
+              <Text style={styles.infoEmoji}>💡</Text>
+              <Text style={styles.infoText}>
+                メールが届かない場合は、迷惑メールフォルダもご確認ください。
+              </Text>
+            </View>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>パスワードを思い出しましたか？</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.footerLink}>ログイン</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  backButton: {
+    paddingVertical: 12,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#FF9800',
+    fontWeight: '500',
+  },
+  header: {
+    alignItems: 'center',
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  logo: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  form: {
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#333',
+  },
+  inputError: {
+    borderColor: '#E57373',
+  },
+  errorText: {
+    color: '#E57373',
+    fontSize: 12,
+    marginTop: 6,
+  },
+  submitButton: {
+    backgroundColor: '#FF9800',
+    borderRadius: 25,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  submitButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 24,
+  },
+  infoEmoji: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1976D2',
+    lineHeight: 20,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 32,
+  },
+  footerText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  footerLink: {
+    color: '#FF9800',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  // Success State Styles
+  successContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  successContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 60,
+  },
+  successEmoji: {
+    fontSize: 72,
+    marginBottom: 24,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  successMessage: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  resendButton: {
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  resendButtonText: {
+    color: '#FF9800',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  backToLoginButton: {
+    backgroundColor: '#FF9800',
+    borderRadius: 25,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+  },
+  backToLoginText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

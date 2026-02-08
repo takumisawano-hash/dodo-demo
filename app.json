@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "DoDo",
+    "slug": "dodo-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#64B5F6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.getdodo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "DoDo uses your camera to scan food for diet tracking.",
+        "NSPhotoLibraryUsageDescription": "DoDo uses your photo library to upload food images."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#64B5F6"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.getdodo.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icons/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-localization"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}

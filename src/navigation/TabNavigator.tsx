@@ -1,0 +1,198 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import HomeScreen from '../screens/HomeScreen';
+import ChatScreen from '../screens/ChatScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import AgentDashboardScreen from '../screens/AgentDashboardScreen';
+import AgentDetailScreen from '../screens/AgentDetailScreen';
+import AgentProfileScreen from '../screens/AgentProfileScreen';
+import MySlotsScreen from '../screens/MySlotsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import PricingScreen from '../screens/PricingScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import RemindersScreen from '../screens/RemindersScreen';
+
+const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
+const DashboardStack = createNativeStackNavigator();
+const MySlotsStack = createNativeStackNavigator();
+const SettingsStack = createNativeStackNavigator();
+
+// タブアイコンコンポーネント
+interface TabIconProps {
+  emoji: string;
+  focused: boolean;
+  color: string;
+}
+
+function TabIcon({ emoji, focused }: TabIconProps) {
+  return (
+    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
+      <Text style={[styles.iconEmoji, focused && styles.iconEmojiFocused]}>
+        {emoji}
+      </Text>
+    </View>
+  );
+}
+
+// Home Stack
+function HomeStackScreen() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Chat" component={ChatScreen} />
+      <HomeStack.Screen name="AgentDetail" component={AgentDetailScreen} />
+      <HomeStack.Screen name="AgentProfile" component={AgentProfileScreen} />
+    </HomeStack.Navigator>
+  );
+}
+
+// Dashboard Stack
+function DashboardStackScreen() {
+  return (
+    <DashboardStack.Navigator>
+      <DashboardStack.Screen 
+        name="DashboardMain" 
+        component={DashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <DashboardStack.Screen 
+        name="AgentDashboard" 
+        component={AgentDashboardScreen}
+        options={({ route }) => ({ 
+          title: route.params?.agentName || '詳細' 
+        })}
+      />
+      <DashboardStack.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{ headerShown: false }}
+      />
+    </DashboardStack.Navigator>
+  );
+}
+
+// MySlots Stack
+function MySlotsStackScreen() {
+  return (
+    <MySlotsStack.Navigator screenOptions={{ headerShown: false }}>
+      <MySlotsStack.Screen name="MySlotsMain" component={MySlotsScreen} />
+      <MySlotsStack.Screen name="Pricing" component={PricingScreen} />
+      <MySlotsStack.Screen name="Chat" component={ChatScreen} />
+      <MySlotsStack.Screen name="AgentProfile" component={AgentProfileScreen} />
+    </MySlotsStack.Navigator>
+  );
+}
+
+// Settings Stack
+function SettingsStackScreen() {
+  return (
+    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="Pricing" component={PricingScreen} />
+      <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
+      <SettingsStack.Screen name="Profile" component={ProfileScreen} />
+      <SettingsStack.Screen name="Notifications" component={NotificationsScreen} />
+      <SettingsStack.Screen name="Reminders" component={RemindersScreen} />
+    </SettingsStack.Navigator>
+  );
+}
+
+export default function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: '#FF9800',
+        tabBarInactiveTintColor: '#999',
+        tabBarLabelStyle: styles.tabLabel,
+      }}
+    >
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeStackScreen}
+        options={{
+          tabBarLabel: 'ホーム',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="🏠" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="DashboardTab"
+        component={DashboardStackScreen}
+        options={{
+          tabBarLabel: 'ダッシュボード',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="📊" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MySlotsTab"
+        component={MySlotsStackScreen}
+        options={{
+          tabBarLabel: 'マイスロット',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="👑" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsStackScreen}
+        options={{
+          tabBarLabel: '設定',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="⚙️" focused={focused} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 8,
+    paddingBottom: 8,
+    height: 65,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  iconContainerFocused: {
+    backgroundColor: '#FFF3E0',
+  },
+  iconEmoji: {
+    fontSize: 20,
+    opacity: 0.6,
+  },
+  iconEmojiFocused: {
+    fontSize: 22,
+    opacity: 1,
+  },
+});
