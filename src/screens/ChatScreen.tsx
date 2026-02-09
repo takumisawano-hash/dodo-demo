@@ -13,12 +13,14 @@ import {
   Alert,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { t, useI18n, formatDate } from '../i18n';
 import SyncNotification from '../components/SyncNotification';
 import { AGENT_IMAGES } from '../data/agentImages';
-import { sendChatMessage, ChatMessage as AIChatMessage } from '../services/ai';
+import { sendChatMessage, sendChatMessageWithImage, ChatMessage as AIChatMessage } from '../services/ai';
 
 // ----------------------------------------
 // Types
@@ -320,6 +322,8 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isOnline] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isPickingImage, setIsPickingImage] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -338,6 +342,64 @@ export default function ChatScreen({ route, navigation }: Props) {
     flatListRef.current?.scrollToEnd({ animated: true });
   };
 
+  // 画像ピッカー
+  const pickImage = async (useCamera: boolean = false) => {
+    setIsPickingImage(true);
+    try {
+      let result;
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('カメラへのアクセスが必要です');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+          base64: true,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('写真ライブラリへのアクセスが必要です');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+          base64: true,
+        });
+      }
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('画像の選択に失敗しました');
+    } finally {
+      setIsPickingImage(false);
+    }
+  };
+
+  const showImageOptions = () => {
+    Alert.alert(
+      '画像を追加',
+      'どこから画像を選びますか？',
+      [
+        { text: 'カメラ', onPress: () => pickImage(true) },
+        { text: 'ライブラリ', onPress: () => pickImage(false) },
+        { text: 'キャンセル', style: 'cancel' },
+      ]
+    );
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+  };
+
   // 会話履歴をAI用フォーマットに変換
   const getConversationHistory = useCallback((): AIChatMessage[] => {
     return messages
@@ -351,7 +413,8 @@ export default function ChatScreen({ route, navigation }: Props) {
   const sendMessage = useCallback(
     async (text?: string) => {
       const messageText = (text || inputText).trim();
-      if (!messageText || isLoading) return;
+      const hasImage = !!selectedImage;
+      if ((!messageText && !hasImage) || isLoading) return;
 
       const userMessage: Message = {
         id: Date.now().toString(),
@@ -363,6 +426,8 @@ export default function ChatScreen({ route, navigation }: Props) {
 
       setMessages((prev) => [...prev, userMessage]);
       setInputText('');
+      const imageToSend = selectedImage;
+      setSelectedImage(null);
       setIsLoading(true);
 
       // 既読マークを更新
@@ -385,9 +450,57 @@ export default function ChatScreen({ route, navigation }: Props) {
       setMessages((prev) => [...prev, assistantMessage]);
 
       try {
-        // AI APIを呼び出し（ストリーミング）
+        // AI APIを呼び出し
         const conversationHistory = getConversationHistory();
         
+        // 画像がある場合はVision APIを使用
+        if (imageToSend) {
+          // 画像をbase64に変換
+          const response = await fetch(imageToSend);
+          const blob = await response.blob();
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+
+          const result = await sendChatMessageWithImage(
+            agent.id,
+            messageText || 'この画像について教えてください。',
+            base64,
+            conversationHistory,
+            {
+              callbacks: {
+                onComplete: (fullText: string) => {
+                  const inputType = detectInputType(messageText);
+                  const syncNotification = inputType ? SYNC_DESTINATIONS[inputType] : undefined;
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMessageId
+                        ? { ...m, content: fullText, isStreaming: false, syncNotification }
+                        : m
+                    )
+                  );
+                  setIsLoading(false);
+                },
+                onError: (error: Error) => {
+                  console.error('AI Vision Error:', error);
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMessageId
+                        ? { ...m, content: `${agent.emoji} 画像の解析に失敗しました。もう一度試してください。`, isStreaming: false }
+                        : m
+                    )
+                  );
+                  setIsLoading(false);
+                },
+              },
+            }
+          );
+          return;
+        }
+
+        // テキストのみの場合はストリーミング
         await sendChatMessage(
           agent.id,
           messageText,
@@ -459,7 +572,7 @@ export default function ChatScreen({ route, navigation }: Props) {
         setIsLoading(false);
       }
     },
-    [inputText, isLoading, agent, getConversationHistory]
+    [inputText, isLoading, agent, getConversationHistory, selectedImage]
   );
 
   const handleLongPress = (message: Message) => {
@@ -563,7 +676,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     );
   };
 
-  const canSend = inputText.trim().length > 0 && !isLoading;
+  const canSend = (inputText.trim().length > 0 || selectedImage) && !isLoading;
   const agentName = t(`agents.${agent.id}.name`);
 
   return (
@@ -657,12 +770,27 @@ export default function ChatScreen({ route, navigation }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
+        {/* 選択された画像のプレビュー */}
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+            <TouchableOpacity style={styles.removeImageButton} onPress={clearSelectedImage}>
+              <Text style={styles.removeImageText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.inputContainer}>
           <TouchableOpacity
-            style={styles.attachButton}
-            onPress={() => Alert.alert(t('chat.attachImage'), t('chat.attachPreparing'))}
+            style={[styles.attachButton, { backgroundColor: selectedImage ? agent.color + '30' : undefined }]}
+            onPress={showImageOptions}
+            disabled={isPickingImage}
           >
-            <Text style={styles.attachButtonText}>+</Text>
+            {isPickingImage ? (
+              <ActivityIndicator size="small" color={agent.color} />
+            ) : (
+              <Text style={[styles.attachButtonText, selectedImage && { color: agent.color }]}>📷</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.inputWrapper}>
@@ -670,7 +798,7 @@ export default function ChatScreen({ route, navigation }: Props) {
               style={styles.textInput}
               value={inputText}
               onChangeText={setInputText}
-              placeholder={t('chat.inputPlaceholder')}
+              placeholder={selectedImage ? '画像について質問...' : t('chat.inputPlaceholder')}
               placeholderTextColor="#999"
               multiline
               maxLength={2000}
@@ -1001,6 +1129,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
     borderTopWidth: 1,
     borderTopColor: '#EEEEEE',
+  },
+  imagePreviewContainer: {
+    padding: 12,
+    paddingBottom: 0,
+    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    position: 'relative',
+  },
+  imagePreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    left: 76,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   attachButton: {
     width: 36,

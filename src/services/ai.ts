@@ -465,6 +465,93 @@ export function getAIStatus(): {
 }
 
 // ----------------------------------------
+// Vision (Image) Support
+// ----------------------------------------
+
+/**
+ * 画像付きメッセージを送信（Vision API）
+ */
+export async function sendChatMessageWithImage(
+  coachId: string,
+  userMessage: string,
+  imageBase64: string,
+  conversationHistory: ChatMessage[] = [],
+  options: {
+    callbacks?: StreamCallbacks;
+  } = {}
+): Promise<AIResponse> {
+  const { callbacks } = options;
+
+  // システムプロンプトを取得
+  const systemPrompt = getCoachSystemPrompt(coachId);
+
+  // Anthropic Vision APIを使用（Claude 3はビジョン対応）
+  if (config.anthropicApiKey) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307', // Vision対応モデル
+          max_tokens: config.maxTokens,
+          system: systemPrompt,
+          messages: [
+            ...conversationHistory.map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: 'image/jpeg',
+                    data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+                  },
+                },
+                {
+                  type: 'text',
+                  text: userMessage || 'この画像について教えてください。',
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(`Anthropic Vision API error: ${response.status} - ${error.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      const content = data.content[0]?.text || '';
+
+      callbacks?.onComplete?.(content);
+
+      return {
+        content,
+        provider: 'anthropic',
+        tokensUsed: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+      };
+    } catch (error) {
+      console.error('Anthropic Vision API failed:', error);
+      callbacks?.onError?.(error as Error);
+    }
+  }
+
+  // フォールバック: 画像なしで送信
+  console.warn('Vision API not available, sending text only');
+  return sendChatMessage(coachId, userMessage + ' [画像が添付されていましたが、現在画像解析機能は利用できません]', conversationHistory, options);
+}
+
+// ----------------------------------------
 // Export
 // ----------------------------------------
 export default {
