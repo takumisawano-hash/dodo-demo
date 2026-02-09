@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useSlots, Agent } from '../context/SlotsContext';
+import { useTheme } from '../theme';
 
 interface Plan {
   id: string;
@@ -52,6 +53,8 @@ const ADDITIONAL_MESSAGES_PRICE = 200;
 const ADDITIONAL_MESSAGES_AMOUNT = 50;
 
 export default function MySlotsScreen({ navigation, route }: Props) {
+  const { colors, isDark } = useTheme();
+  
   // グローバルスロット状態を使用
   const { assignedAgents, setAssignedAgents, allAgents, addToSlot, removeFromSlot, isInSlot, hasEmptySlot } = useSlots();
 
@@ -193,7 +196,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
   const slots = Array.from({ length: totalSlots }, (_, i) => assignedAgents[i] || null);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
@@ -201,10 +204,10 @@ export default function MySlotsScreen({ navigation, route }: Props) {
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backText}>← 戻る</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>← 戻る</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>マイスロット</Text>
-          <Text style={styles.subtitle}>コーチを自由に入れ替えよう</Text>
+          <Text style={[styles.title, { color: colors.text }]}>マイスロット</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>コーチを自由に入れ替えよう</Text>
         </View>
 
         {/* Free Trial 残り日数表示 */}
