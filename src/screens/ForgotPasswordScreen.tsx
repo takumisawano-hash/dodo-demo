@@ -10,10 +10,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resetPassword } from '../services/supabase';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 interface Props {
   navigation: any;
@@ -154,7 +156,11 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🦤</Text>
+            <Image 
+              source={{ uri: AGENT_IMAGES['diet-coach'] }} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={[styles.title, { color: colors.text }]}>パスワードをリセット</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               アカウントに登録されているメールアドレスを入力してください。{'\n'}
@@ -247,8 +253,9 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 32,
   },
-  logo: {
-    fontSize: 64,
+  logoImage: {
+    width: 80,
+    height: 80,
     marginBottom: 16,
   },
   title: {

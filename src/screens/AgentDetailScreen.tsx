@@ -8,10 +8,13 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { purchaseService, SubscriptionStatus } from '../services/purchases';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 const { width } = Dimensions.get('window');
 
@@ -43,12 +46,12 @@ const SAMPLE_REVIEWS = [
   },
 ];
 
-// Features for each agent
+// Features for each agent - using Ionicons names
 const AGENT_FEATURES = [
-  { icon: '💬', title: '24時間チャット', description: 'いつでも相談できる' },
-  { icon: '📊', title: '進捗トラッキング', description: '目標達成をサポート' },
-  { icon: '🎯', title: 'パーソナライズ', description: 'あなた専用のアドバイス' },
-  { icon: '🔔', title: 'リマインダー', description: '習慣化をお手伝い' },
+  { iconName: 'chatbubbles', title: '24時間チャット', description: 'いつでも相談できる' },
+  { iconName: 'stats-chart', title: '進捗トラッキング', description: '目標達成をサポート' },
+  { iconName: 'flag', title: 'パーソナライズ', description: 'あなた専用のアドバイス' },
+  { iconName: 'notifications', title: 'リマインダー', description: '習慣化をお手伝い' },
 ];
 
 interface Agent {
@@ -208,7 +211,11 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
             <Text style={[styles.backText, { color: colors.textSecondary }]}>← 戻る</Text>
           </TouchableOpacity>
 
-          <Text style={styles.heroEmoji}>{agent.emoji}</Text>
+          {AGENT_IMAGES[agent.id] ? (
+            <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.heroImage} />
+          ) : (
+            <Text style={styles.heroEmoji}>{agent.emoji}</Text>
+          )}
           <Text style={[styles.heroName, { color: agent.color }]}>{agent.name}</Text>
           <Text style={styles.heroRole}>{agent.role}</Text>
           
@@ -241,14 +248,17 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
         {/* Features Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>✨ 機能</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="sparkles" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>機能</Text>
+          </View>
           <View style={styles.featuresGrid}>
             {AGENT_FEATURES.map((feature, index) => (
               <View 
                 key={index} 
                 style={[styles.featureCard, { borderColor: agent.color + '30', backgroundColor: colors.card }]}
               >
-                <Text style={styles.featureIcon}>{feature.icon}</Text>
+                <Ionicons name={feature.iconName as any} size={28} color={agent.color} style={{ marginBottom: 8 }} />
                 <Text style={[styles.featureTitle, { color: agent.color }]}>
                   {feature.title}
                 </Text>
@@ -426,6 +436,13 @@ const styles = StyleSheet.create({
   heroEmoji: {
     fontSize: 80,
     marginBottom: 12,
+  },
+  heroImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 12,
+    backgroundColor: '#fff',
   },
   heroName: {
     fontSize: 32,

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useTheme } from '../theme';
 
@@ -266,7 +267,10 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
 
         {/* できること */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>🎯 こんなことができるよ！</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="flag" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>こんなことができるよ！</Text>
+          </View>
           {profile.canHelp.map((item, index) => (
             <View key={index} style={styles.helpItem}>
               <Text style={[styles.helpText, { color: colors.textSecondary }]}>{item}</Text>

@@ -7,10 +7,25 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  Image,
 } from 'react-native';
+import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = -80;
+
+// Map agent names to IDs
+const AGENT_NAME_TO_ID: { [key: string]: string } = {
+  'ドードー': 'diet-coach',
+  'オウル': 'habit-coach',
+  'ポリー': 'language-tutor',
+  'コアラ': 'sleep-coach',
+  'スワン': 'mental-coach',
+  'ゴリラ': 'fitness-coach',
+  'フィンチ': 'money-coach',
+  'イーグル': 'career-coach',
+};
 
 export type NotificationType = 
   | 'goal_achieved'      // 🎯 目標達成
@@ -51,10 +66,13 @@ export default function NotificationItem({
   onDelete,
   onMarkAsRead,
 }: Props) {
+  const { colors, isDark } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const deleteOpacity = useRef(new Animated.Value(0)).current;
 
   const config = NOTIFICATION_CONFIG[notification.type];
+  const agentId = notification.agentName ? AGENT_NAME_TO_ID[notification.agentName] : null;
+  const agentImageUrl = agentId ? AGENT_IMAGES[agentId] : null;
   
   const panResponder = useRef(
     PanResponder.create({
@@ -130,14 +148,15 @@ export default function NotificationItem({
       <Animated.View
         style={[
           styles.cardWrapper,
-          { transform: [{ translateX }] },
+          { backgroundColor: colors.background, transform: [{ translateX }] },
         ]}
         {...panResponder.panHandlers}
       >
         <TouchableOpacity
           style={[
             styles.card,
-            !notification.isRead && styles.unreadCard,
+            { backgroundColor: colors.card },
+            !notification.isRead && [styles.unreadCard, { backgroundColor: isDark ? colors.surface : '#FEFEFE' }],
           ]}
           onPress={handlePress}
           activeOpacity={0.7}
@@ -148,10 +167,12 @@ export default function NotificationItem({
           )}
 
           {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
-            <Text style={styles.icon}>
-              {notification.agentEmoji || config.emoji}
-            </Text>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? config.color + '30' : config.bgColor }]}>
+            {agentImageUrl ? (
+              <Image source={{ uri: agentImageUrl }} style={styles.agentImage} />
+            ) : (
+              <Text style={styles.icon}>{config.emoji}</Text>
+            )}
           </View>
 
           {/* Content */}
@@ -160,27 +181,34 @@ export default function NotificationItem({
               <Text 
                 style={[
                   styles.title,
-                  !notification.isRead && styles.unreadTitle,
+                  { color: colors.textSecondary },
+                  !notification.isRead && [styles.unreadTitle, { color: colors.text }],
                 ]}
                 numberOfLines={1}
               >
                 {notification.title}
               </Text>
-              <Text style={styles.time}>{formatTime(notification.timestamp)}</Text>
+              <Text style={[styles.time, { color: colors.textTertiary }]}>{formatTime(notification.timestamp)}</Text>
             </View>
             <Text 
               style={[
                 styles.message,
-                !notification.isRead && styles.unreadMessage,
+                { color: colors.textTertiary },
+                !notification.isRead && [styles.unreadMessage, { color: colors.textSecondary }],
               ]}
               numberOfLines={2}
             >
               {notification.message}
             </Text>
             {notification.agentName && (
-              <Text style={[styles.agentName, { color: config.color }]}>
-                {notification.agentEmoji} {notification.agentName}より
-              </Text>
+              <View style={styles.agentRow}>
+                {agentImageUrl && (
+                  <Image source={{ uri: agentImageUrl }} style={styles.agentSmallImage} />
+                )}
+                <Text style={[styles.agentName, { color: config.color }]}>
+                  {notification.agentName}より
+                </Text>
+              </View>
             )}
           </View>
         </TouchableOpacity>
@@ -257,6 +285,22 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 22,
+  },
+  agentImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  agentSmallImage: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 4,
+  },
+  agentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
   },
   content: {
     flex: 1,

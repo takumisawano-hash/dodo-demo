@@ -6,18 +6,21 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 // Categories
-const CATEGORIES = [
-  { id: 'all', name: 'すべて', emoji: '✨' },
-  { id: 'health', name: '健康', emoji: '💪' },
-  { id: 'learning', name: '学習', emoji: '📚' },
-  { id: 'productivity', name: '生産性', emoji: '⚡' },
-  { id: 'lifestyle', name: 'ライフスタイル', emoji: '🌿' },
-  { id: 'finance', name: '資産管理', emoji: '💰' },
+const CATEGORIES: { id: string; name: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'all', name: 'すべて', icon: 'sparkles' },
+  { id: 'health', name: '健康', icon: 'fitness' },
+  { id: 'learning', name: '学習', icon: 'book' },
+  { id: 'productivity', name: '生産性', icon: 'flash' },
+  { id: 'lifestyle', name: 'ライフスタイル', icon: 'leaf' },
+  { id: 'finance', name: '資産管理', icon: 'wallet' },
 ];
 
 // Extended agent data for market
@@ -197,7 +200,12 @@ export default function MarketScreen({ navigation }: Props) {
             ]}
             onPress={() => setSelectedCategory(cat.id)}
           >
-            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+            <Ionicons 
+              name={cat.icon} 
+              size={14} 
+              color={selectedCategory === cat.id ? '#fff' : colors.textSecondary} 
+              style={{ marginRight: 6 }}
+            />
             <Text style={[
               styles.categoryText,
               { color: colors.textSecondary },
@@ -242,7 +250,7 @@ export default function MarketScreen({ navigation }: Props) {
         {filteredAgents.map((agent) => (
           <TouchableOpacity
             key={agent.id}
-            style={[styles.agentCard, { backgroundColor: agent.bgGradient[0] }]}
+            style={[styles.agentCard, { backgroundColor: isDark ? agent.color + '20' : agent.bgGradient[0] }]}
             onPress={() => navigation.navigate('AgentDetail', { agent })}
             activeOpacity={0.8}
           >
@@ -254,31 +262,35 @@ export default function MarketScreen({ navigation }: Props) {
             )}
 
             <View style={styles.agentInfo}>
-              <Text style={styles.agentEmoji}>{agent.emoji}</Text>
+              {AGENT_IMAGES[agent.id] ? (
+                <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.agentImage} />
+              ) : (
+                <Text style={styles.agentEmoji}>{agent.emoji}</Text>
+              )}
               <View style={styles.agentText}>
                 <Text style={[styles.agentName, { color: agent.color }]}>
                   {agent.name}
                 </Text>
-                <Text style={styles.agentRole}>{agent.role}</Text>
+                <Text style={[styles.agentRole, { color: colors.textSecondary }]}>{agent.role}</Text>
                 
                 {/* Rating */}
                 <View style={styles.ratingContainer}>
                   <Text style={[styles.stars, { color: agent.color }]}>
                     {renderStars(agent.rating)}
                   </Text>
-                  <Text style={styles.ratingText}>
+                  <Text style={[styles.ratingText, { color: colors.textTertiary }]}>
                     {agent.rating} ({agent.reviews.toLocaleString()}件)
                   </Text>
                 </View>
 
-                <Text style={styles.agentDescription}>{agent.description}</Text>
+                <Text style={[styles.agentDescription, { color: colors.textTertiary }]}>{agent.description}</Text>
               </View>
             </View>
 
             {/* Price & Subscribers */}
             <View style={styles.bottomRow}>
               <View style={styles.subscribersInfo}>
-                <Text style={styles.subscribersText}>
+                <Text style={[styles.subscribersText, { color: colors.textTertiary }]}>
                   👥 {agent.subscribers.toLocaleString()}人が利用中
                 </Text>
               </View>
@@ -449,6 +461,12 @@ const styles = StyleSheet.create({
   },
   agentEmoji: {
     fontSize: 48,
+    marginRight: 16,
+  },
+  agentImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     marginRight: 16,
   },
   agentText: {

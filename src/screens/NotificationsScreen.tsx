@@ -174,20 +174,38 @@ export default function NotificationsScreen({ navigation }: Props) {
     switch (notification.type) {
       case 'agent_message':
         // Navigate to chat with agent
-        console.log('Navigate to chat:', notification.agentName);
+        if (notification.agentName) {
+          // Map agent name to ID for navigation
+          const agentNameToId: { [key: string]: string } = {
+            'ドードー': 'diet-coach',
+            'オウル': 'habit-coach',
+            'ポリー': 'language-tutor',
+            'コアラ': 'sleep-coach',
+            'スワン': 'mental-coach',
+            'ゴリラ': 'fitness-coach',
+          };
+          const agentId = agentNameToId[notification.agentName] || 'diet-coach';
+          navigation.navigate('Chat', { agentId, agentName: notification.agentName });
+        }
         break;
       case 'weekly_report':
         // Navigate to progress/stats
-        console.log('Navigate to progress');
+        navigation.navigate('Progress');
         break;
       case 'special_offer':
         // Navigate to subscription
-        console.log('Navigate to subscription');
+        navigation.navigate('Subscription');
+        break;
+      case 'goal_achieved':
+      case 'streak':
+        // Navigate to progress to see achievements
+        navigation.navigate('Progress');
         break;
       default:
-        console.log('Notification pressed:', notification.id);
+        // Generic notification - just mark as read
+        break;
     }
-  }, []);
+  }, [navigation]);
 
   const handleDelete = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));

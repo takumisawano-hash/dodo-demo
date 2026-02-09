@@ -1,5 +1,8 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useColorScheme, ColorSchemeName } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const THEME_STORAGE_KEY = '@dodo_theme_mode';
 
 // Color definitions
 const lightColors = {
@@ -87,11 +90,14 @@ const darkColors = {
 };
 
 export type ThemeColors = typeof lightColors;
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeContextType {
   colors: ThemeColors;
   isDark: boolean;
   colorScheme: ColorSchemeName;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -101,12 +107,45 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const systemColorScheme = useColorScheme();
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load saved theme on mount
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme && ['system', 'light', 'dark'].includes(savedTheme)) {
+          setThemeModeState(savedTheme as ThemeMode);
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+      setIsLoaded(true);
+    };
+    loadTheme();
+  }, []);
+
+  const setThemeMode = async (mode: ThemeMode) => {
+    setThemeModeState(mode);
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+    } catch (e) {
+      // Ignore errors
+    }
+  };
+
+  // Determine actual dark mode based on themeMode
+  const isDark = themeMode === 'system' 
+    ? systemColorScheme === 'dark'
+    : themeMode === 'dark';
+  
   const colors = isDark ? darkColors : lightColors;
+  const colorScheme: ColorSchemeName = isDark ? 'dark' : 'light';
 
   return (
-    <ThemeContext.Provider value={{ colors, isDark, colorScheme }}>
+    <ThemeContext.Provider value={{ colors, isDark, colorScheme, themeMode, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -120,6 +159,8 @@ export function useTheme(): ThemeContextType {
       colors: lightColors,
       isDark: false,
       colorScheme: 'light',
+      themeMode: 'system',
+      setThemeMode: () => {},
     };
   }
   return context;

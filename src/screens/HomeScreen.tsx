@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   tipEmoji: { fontSize: 24, marginRight: 12 },
   tipText: { flex: 1, fontSize: 14 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 12 },
-  agentCard: { borderRadius: 20, padding: 20, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
+  agentCard: { borderRadius: 20, padding: 20, marginBottom: 12, shadowColor: 'transparent', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0, shadowRadius: 0, elevation: 0 },
   speechBubble: {
     borderRadius: 16,
     padding: 12,

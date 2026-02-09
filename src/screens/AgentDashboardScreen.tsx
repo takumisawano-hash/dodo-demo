@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import SimpleChart from '../components/SimpleChart';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useTheme } from '../theme';
@@ -298,7 +299,9 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for fitness (body parts) */}
         {agent.id === 'fitness-coach' && 'bodyParts' in data && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>💪 部位別ボリューム</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              <Ionicons name="fitness" size={18} color={colors.text} /> 部位別ボリューム
+            </Text>
             <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof FITNESS_DATA).bodyParts}

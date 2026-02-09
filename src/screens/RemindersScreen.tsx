@@ -10,9 +10,12 @@ import {
   Modal,
   TextInput,
   Platform,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 interface Props {
   navigation: any;
@@ -22,20 +25,30 @@ interface Reminder {
   id: string;
   agentId: string;
   agentName: string;
-  agentEmoji: string;
+  agentColor: string;
   time: string;
   days: string[];
   message: string;
   enabled: boolean;
 }
 
+// Available agents for reminder creation
+const AVAILABLE_AGENTS = [
+  { id: 'diet-coach', name: 'ドードー', color: '#FF9800' },
+  { id: 'language-tutor', name: 'ポリー', color: '#81C784' },
+  { id: 'habit-coach', name: 'オウル', color: '#BA68C8' },
+  { id: 'fitness-coach', name: 'ゴリラ', color: '#A1887F' },
+  { id: 'sleep-coach', name: 'コアラ', color: '#90A4AE' },
+  { id: 'mental-coach', name: 'スワン', color: '#F48FB1' },
+];
+
 // モックデータ
 const initialReminders: Reminder[] = [
   {
     id: '1',
-    agentId: 'dodo-1',
+    agentId: 'diet-coach',
     agentName: 'ドードー',
-    agentEmoji: '🦤',
+    agentColor: '#FF9800',
     time: '08:00',
     days: ['everyday'],
     message: '体重を測ろう！',
@@ -43,9 +56,9 @@ const initialReminders: Reminder[] = [
   },
   {
     id: '2',
-    agentId: 'penguin-1',
-    agentName: 'ペンギン',
-    agentEmoji: '🐧',
+    agentId: 'fitness-coach',
+    agentName: 'ゴリラ',
+    agentColor: '#A1887F',
     time: '12:00',
     days: ['mon', 'wed', 'fri'],
     message: 'ストレッチの時間だよ！',
@@ -53,9 +66,9 @@ const initialReminders: Reminder[] = [
   },
   {
     id: '3',
-    agentId: 'owl-1',
-    agentName: 'ふくろう',
-    agentEmoji: '🦉',
+    agentId: 'habit-coach',
+    agentName: 'オウル',
+    agentColor: '#BA68C8',
     time: '22:00',
     days: ['everyday'],
     message: '今日の振り返りをしよう',
@@ -63,9 +76,9 @@ const initialReminders: Reminder[] = [
   },
   {
     id: '4',
-    agentId: 'cat-1',
-    agentName: 'ねこ',
-    agentEmoji: '🐱',
+    agentId: 'sleep-coach',
+    agentName: 'コアラ',
+    agentColor: '#90A4AE',
     time: '07:30',
     days: ['sat', 'sun'],
     message: '週末ランニングの時間！',
@@ -108,9 +121,16 @@ export default function RemindersScreen({ navigation }: Props) {
   const { colors, isDark } = useTheme();
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [addModalVisible, setAddModalVisible] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [editTime, setEditTime] = useState('');
   const [editMessage, setEditMessage] = useState('');
+  
+  // New reminder state
+  const [newAgentId, setNewAgentId] = useState('');
+  const [newTime, setNewTime] = useState('08:00');
+  const [newMessage, setNewMessage] = useState('');
+  const [newDays, setNewDays] = useState<string[]>(['everyday']);
 
   // リマインダーのON/OFF切り替え
   const toggleReminder = (id: string) => {
@@ -174,13 +194,62 @@ export default function RemindersScreen({ navigation }: Props) {
     setEditingReminder(null);
   };
 
-  // 新規追加
+  // Open add modal
   const handleAddReminder = () => {
-    Alert.alert(
-      '新規リマインダー',
-      'この機能は近日公開予定です。\nエージェント詳細画面からリマインダーを設定できるようになります。',
-      [{ text: 'OK' }]
-    );
+    setNewAgentId('');
+    setNewTime('08:00');
+    setNewMessage('');
+    setNewDays(['everyday']);
+    setAddModalVisible(true);
+  };
+
+  // Save new reminder
+  const saveNewReminder = () => {
+    // Validation
+    const timeRegex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!newAgentId) {
+      Alert.alert('エラー', 'エージェントを選択してください');
+      return;
+    }
+    if (!timeRegex.test(newTime)) {
+      Alert.alert('エラー', '時間は HH:MM 形式で入力してください（例: 08:00）');
+      return;
+    }
+    if (!newMessage.trim()) {
+      Alert.alert('エラー', 'メッセージを入力してください');
+      return;
+    }
+
+    const selectedAgent = AVAILABLE_AGENTS.find(a => a.id === newAgentId);
+    if (!selectedAgent) return;
+
+    const newReminder: Reminder = {
+      id: Date.now().toString(),
+      agentId: selectedAgent.id,
+      agentName: selectedAgent.name,
+      agentColor: selectedAgent.color,
+      time: newTime,
+      days: newDays,
+      message: newMessage.trim(),
+      enabled: true,
+    };
+
+    setReminders(prev => [newReminder, ...prev]);
+    setAddModalVisible(false);
+  };
+
+  // Toggle day selection
+  const toggleDay = (day: string) => {
+    if (day === 'everyday') {
+      setNewDays(['everyday']);
+    } else {
+      const newDaysList = newDays.filter(d => d !== 'everyday');
+      if (newDaysList.includes(day)) {
+        setNewDays(newDaysList.filter(d => d !== day));
+      } else {
+        setNewDays([...newDaysList, day]);
+      }
+    }
   };
 
   // リマインダーカードのレンダリング
@@ -189,15 +258,24 @@ export default function RemindersScreen({ navigation }: Props) {
       {/* ヘッダー: エージェント名 + スイッチ */}
       <View style={styles.cardHeader}>
         <View style={styles.agentInfo}>
-          <Text style={styles.agentEmoji}>{item.agentEmoji}</Text>
-          <Text style={[styles.agentName, { color: colors.text }, !item.enabled && [styles.textDisabled, { color: colors.textSecondary }]]}>
+          {AGENT_IMAGES[item.agentId] ? (
+            <Image 
+              source={{ uri: AGENT_IMAGES[item.agentId] }} 
+              style={[styles.agentImage, !item.enabled && styles.imageDisabled]} 
+            />
+          ) : (
+            <View style={[styles.agentImagePlaceholder, { backgroundColor: item.agentColor + '40' }]}>
+              <Text style={styles.agentInitial}>{item.agentName[0]}</Text>
+            </View>
+          )}
+          <Text style={[styles.agentName, { color: item.agentColor }, !item.enabled && [styles.textDisabled, { color: colors.textSecondary }]]}>
             {item.agentName}
           </Text>
         </View>
         <Switch
           value={item.enabled}
           onValueChange={() => toggleReminder(item.id)}
-          trackColor={{ false: '#E0E0E0', true: '#81C784' }}
+          trackColor={{ false: isDark ? '#444' : '#E0E0E0', true: '#81C784' }}
           thumbColor={item.enabled ? '#4CAF50' : '#FFFFFF'}
         />
       </View>
@@ -292,10 +370,17 @@ export default function RemindersScreen({ navigation }: Props) {
 
             {editingReminder && (
               <View style={styles.modalAgent}>
-                <Text style={styles.modalAgentEmoji}>
-                  {editingReminder.agentEmoji}
-                </Text>
-                <Text style={[styles.modalAgentName, { color: colors.text }]}>
+                {AGENT_IMAGES[editingReminder.agentId] ? (
+                  <Image 
+                    source={{ uri: AGENT_IMAGES[editingReminder.agentId] }} 
+                    style={styles.modalAgentImage} 
+                  />
+                ) : (
+                  <View style={[styles.modalAgentPlaceholder, { backgroundColor: editingReminder.agentColor + '40' }]}>
+                    <Text style={styles.modalAgentInitial}>{editingReminder.agentName[0]}</Text>
+                  </View>
+                )}
+                <Text style={[styles.modalAgentName, { color: editingReminder.agentColor }]}>
                   {editingReminder.agentName}
                 </Text>
               </View>
@@ -342,6 +427,124 @@ export default function RemindersScreen({ navigation }: Props) {
                 onPress={saveEdit}
               >
                 <Text style={styles.saveButtonText}>保存</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 新規追加モーダル */}
+      <Modal
+        visible={addModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setAddModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.addModalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>新規リマインダー</Text>
+
+            {/* エージェント選択 */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>エージェント</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.agentSelector}>
+                {AVAILABLE_AGENTS.map(agent => (
+                  <TouchableOpacity
+                    key={agent.id}
+                    style={[
+                      styles.agentOption,
+                      { borderColor: agent.color, backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' },
+                      newAgentId === agent.id && { backgroundColor: agent.color + '30', borderWidth: 2 },
+                    ]}
+                    onPress={() => setNewAgentId(agent.id)}
+                  >
+                    {AGENT_IMAGES[agent.id] ? (
+                      <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.agentOptionImage} />
+                    ) : (
+                      <View style={[styles.agentOptionPlaceholder, { backgroundColor: agent.color + '40' }]}>
+                        <Text style={styles.agentOptionInitial}>{agent.name[0]}</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.agentOptionName, { color: newAgentId === agent.id ? agent.color : colors.text }]}>
+                      {agent.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* 時間入力 */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>時間 (HH:MM)</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5', color: colors.text }]}
+                value={newTime}
+                onChangeText={setNewTime}
+                placeholder="08:00"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+              />
+            </View>
+
+            {/* 曜日選択 */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>曜日</Text>
+              <View style={styles.daysSelector}>
+                <TouchableOpacity
+                  style={[
+                    styles.dayOption,
+                    { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' },
+                    newDays.includes('everyday') && styles.dayOptionSelected,
+                  ]}
+                  onPress={() => toggleDay('everyday')}
+                >
+                  <Text style={[styles.dayOptionText, { color: colors.text }, newDays.includes('everyday') && styles.dayOptionTextSelected]}>毎日</Text>
+                </TouchableOpacity>
+                {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayOption,
+                      styles.dayOptionSmall,
+                      { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' },
+                      newDays.includes(day) && styles.dayOptionSelected,
+                    ]}
+                    onPress={() => toggleDay(day)}
+                  >
+                    <Text style={[styles.dayOptionText, { color: colors.text }, newDays.includes(day) && styles.dayOptionTextSelected]}>{dayLabels[day]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* メッセージ入力 */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>メッセージ</Text>
+              <TextInput
+                style={[styles.input, styles.inputMultiline, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5', color: colors.text }]}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="リマインダーメッセージを入力..."
+                placeholderTextColor={colors.textSecondary}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+
+            {/* モーダルボタン */}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: isDark ? '#2A2A2A' : '#F0F0F0' }]}
+                onPress={() => setAddModalVisible(false)}
+              >
+                <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>キャンセル</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={saveNewReminder}
+              >
+                <Text style={styles.saveButtonText}>追加</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -428,9 +631,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  agentEmoji: {
-    fontSize: 28,
+  agentImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 10,
+  },
+  imageDisabled: {
+    opacity: 0.5,
+  },
+  agentImagePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  agentInitial: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   agentName: {
     fontSize: 17,
@@ -551,9 +772,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  modalAgentEmoji: {
-    fontSize: 32,
+  modalAgentImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     marginRight: 10,
+  },
+  modalAgentPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalAgentInitial: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   modalAgentName: {
     fontSize: 18,
@@ -606,6 +842,70 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  // Add modal styles
+  addModalContent: {
+    maxHeight: '85%',
+  },
+  agentSelector: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  agentOption: {
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    minWidth: 70,
+  },
+  agentOptionImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginBottom: 6,
+  },
+  agentOptionPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginBottom: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  agentOptionInitial: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  agentOptionName: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  daysSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  dayOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  dayOptionSmall: {
+    paddingHorizontal: 12,
+  },
+  dayOptionSelected: {
+    backgroundColor: '#667eea',
+  },
+  dayOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  dayOptionTextSelected: {
     color: '#FFFFFF',
   },
 });

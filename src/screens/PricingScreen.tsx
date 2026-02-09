@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, useI18n, formatCurrency } from '../i18n';
 import { useTheme } from '../theme';
+import { purchaseService, PRODUCT_IDS } from '../services/purchases';
 
 interface Plan {
   id: string;
@@ -99,10 +101,29 @@ export default function PricingScreen({ navigation, route }: Props) {
   const { language } = useI18n();
   const [currentPlan, setCurrentPlan] = useState('trial');
   const [isYearly, setIsYearly] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
   
   // スロット満杯から来た場合のフラグ
   const fromSlotFull = route?.params?.fromSlotFull;
   const pendingAgent = route?.params?.pendingAgent;
+
+  // Load current subscription status
+  useEffect(() => {
+    loadCurrentPlan();
+  }, []);
+
+  const loadCurrentPlan = async () => {
+    try {
+      await purchaseService.initialize();
+      const status = await purchaseService.getSubscriptionStatus();
+      if (status.currentPlan) {
+        setCurrentPlan(status.currentPlan === 'free' ? 'trial' : status.currentPlan);
+      }
+    } catch (error) {
+      console.error('Failed to load subscription status:', error);
+    }
+  };
 
   const getPrice = (plan: Plan) => {
     if (plan.isTrial) return 0;
@@ -118,32 +139,86 @@ export default function PricingScreen({ navigation, route }: Props) {
     return `¥${amount.toLocaleString()}`;
   };
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string) => {
     if (planId === currentPlan) return;
     
     const plan = PLANS.find(p => p.id === planId);
     if (!plan) return;
 
     if (plan.isTrial) {
+      // Downgrade to free plan - just show confirmation
       Alert.alert(
         t('pricing.changePlan'),
         t('pricing.downgradeTo'),
         [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('pricing.change'), onPress: () => setCurrentPlan(planId) },
+          { 
+            text: t('pricing.change'), 
+            onPress: () => {
+              // Note: Downgrade is typically handled via App Store/Play Store subscription management
+              Alert.alert(
+                'サブスクリプション管理',
+                'ダウングレードはApp Store/Google Playのサブスクリプション設定から行ってください。',
+                [{ text: 'OK' }]
+              );
+            }
+          },
         ]
       );
     } else {
       const price = getPrice(plan);
       const period = isYearly ? t('pricing.perYear') : t('pricing.perMonth');
+      
       Alert.alert(
         t('pricing.changePlan'),
         t('pricing.upgradeTo', { name: plan.nameKey, price: `${formatPrice(price)}${period}` }),
         [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('pricing.change'), onPress: () => setCurrentPlan(planId) },
+          { 
+            text: t('pricing.change'), 
+            onPress: () => executePurchase(planId)
+          },
         ]
       );
+    }
+  };
+
+  const executePurchase = async (planId: string) => {
+    setPurchasingPlan(planId);
+    setIsLoading(true);
+    
+    try {
+      await purchaseService.initialize();
+      const result = await purchaseService.purchasePlan(planId);
+      
+      if (result.success) {
+        setCurrentPlan(planId);
+        Alert.alert(
+          '🎉 アップグレード完了',
+          `${PLANS.find(p => p.id === planId)?.nameKey}プランへのアップグレードが完了しました！`,
+          [
+            { 
+              text: 'OK', 
+              onPress: () => {
+                // If came from slot full, go back to add the agent
+                if (fromSlotFull && pendingAgent) {
+                  navigation.goBack();
+                }
+              }
+            }
+          ]
+        );
+      } else if (result.cancelled) {
+        // User cancelled, do nothing
+      } else {
+        Alert.alert('エラー', result.error || '購入に失敗しました。もう一度お試しください。');
+      }
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      Alert.alert('エラー', error.message || '購入処理中にエラーが発生しました。');
+    } finally {
+      setIsLoading(false);
+      setPurchasingPlan(null);
     }
   };
 
@@ -247,7 +322,7 @@ export default function PricingScreen({ navigation, route }: Props) {
             <View style={styles.slotInfo}>
               <View style={[styles.slotBadge, { backgroundColor: plan.color + '20' }]}>
                 <Text style={[styles.slotText, { color: plan.color }]}>
-                  🤖 {plan.slots === 'unlimited' ? t('pricing.allAgents') : `${plan.slots}`}
+                  {plan.slots === 'unlimited' ? t('pricing.allAgents') : `${plan.slots} Agent`}
                 </Text>
               </View>
               <View style={[styles.messageBadge, { backgroundColor: plan.color + '10' }]}>
@@ -270,20 +345,25 @@ export default function PricingScreen({ navigation, route }: Props) {
               style={[
                 styles.selectButton,
                 { backgroundColor: currentPlan === plan.id ? '#E0E0E0' : plan.color },
+                (isLoading && purchasingPlan === plan.id) && styles.buttonDisabled,
               ]}
               onPress={() => handleSelectPlan(plan.id)}
-              disabled={currentPlan === plan.id}
+              disabled={currentPlan === plan.id || isLoading}
             >
-              <Text style={[
-                styles.selectButtonText,
-                currentPlan === plan.id && { color: '#999' }
-              ]}>
-                {currentPlan === plan.id 
-                  ? t('pricing.selected') 
-                  : plan.isTrial 
-                    ? t('pricing.tryFree') 
-                    : t('pricing.selectPlan')}
-              </Text>
+              {isLoading && purchasingPlan === plan.id ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={[
+                  styles.selectButtonText,
+                  currentPlan === plan.id && { color: '#999' }
+                ]}>
+                  {currentPlan === plan.id 
+                    ? t('pricing.selected') 
+                    : plan.isTrial 
+                      ? t('pricing.tryFree') 
+                      : t('pricing.selectPlan')}
+                </Text>
+              )}
             </TouchableOpacity>
           </TouchableOpacity>
         ))}
@@ -438,8 +518,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
   },
   selectButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  buttonDisabled: { opacity: 0.7 },
   footer: { marginTop: 20, alignItems: 'center' },
   footerText: { fontSize: 12, color: '#888', marginBottom: 8 },
 });

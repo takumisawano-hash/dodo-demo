@@ -119,7 +119,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
   // ステップ1: ウェルカム画面
   const renderWelcome = (item: OnboardingSlide) => (
-    <View style={[styles.slide, { backgroundColor: item.bgColor }]}>
+    <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
         {/* エージェントキャラクター画像 */}
         <View style={styles.agentImagesContainer}>
@@ -155,7 +155,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
           />
         </View>
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={styles.welcomeSubtitle}>{item.subtitle}</Text>
+        <Text style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
       </View>
     </View>
   );
@@ -205,34 +205,34 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
   // ステップ3: 使い方
   const renderHowTo = (item: OnboardingSlide) => (
-    <View style={[styles.slide, { backgroundColor: item.bgColor }]}>
+    <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
         <Text style={styles.howtoEmoji}>💬</Text>
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={styles.howtoSubtitle}>{item.subtitle}</Text>
+        <Text style={[styles.howtoSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
         
         {/* クイックアクションボタンのプレビュー */}
-        <View style={styles.quickActionsPreview}>
-          <Text style={styles.previewLabel}>ワンタップで操作</Text>
+        <View style={[styles.quickActionsPreview, { backgroundColor: colors.card }]}>
+          <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>ワンタップで操作</Text>
           <View style={styles.previewButtons}>
-            <View style={[styles.previewButton, { backgroundColor: '#FFF3E0' }]}>
+            <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#FFF3E0' }]}>
               <Text style={styles.previewButtonEmoji}>📝</Text>
-              <Text style={styles.previewButtonText}>記録</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>記録</Text>
             </View>
-            <View style={[styles.previewButton, { backgroundColor: '#FFF3E0' }]}>
+            <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#FFF3E0' }]}>
               <Text style={styles.previewButtonEmoji}>📊</Text>
-              <Text style={styles.previewButtonText}>進捗</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>進捗</Text>
             </View>
-            <View style={[styles.previewButton, { backgroundColor: '#E8F5E9' }]}>
+            <View style={[styles.previewButton, { backgroundColor: isDark ? colors.successLight : '#E8F5E9' }]}>
               <Text style={styles.previewButtonEmoji}>💡</Text>
-              <Text style={styles.previewButtonText}>アドバイス</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>アドバイス</Text>
             </View>
           </View>
         </View>
         
-        <View style={styles.tipContainer}>
+        <View style={[styles.tipContainer, { backgroundColor: isDark ? 'rgba(186, 104, 200, 0.2)' : 'rgba(186, 104, 200, 0.15)' }]}>
           <Text style={styles.tipIcon}>💡</Text>
-          <Text style={styles.tipText}>
+          <Text style={[styles.tipText, { color: isDark ? '#CE93D8' : '#7B1FA2' }]}>
             わからなくなったら{'\n'}
             「何ができる？」と聞いてね
           </Text>

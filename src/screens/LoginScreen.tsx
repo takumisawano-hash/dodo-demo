@@ -9,12 +9,14 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signIn, signInWithOAuth, OAuthProvider } from '../services/supabase';
 import { useTheme } from '../theme';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import { ErrorToast, useErrorHandler } from '../components/ErrorDisplay';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 interface Props {
   navigation: any;
@@ -120,7 +122,11 @@ export default function LoginScreen({ navigation }: Props) {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🦤</Text>
+            <Image 
+              source={{ uri: AGENT_IMAGES['diet-coach'] }} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={[styles.title, dynamicStyles.text]}>DoDo</Text>
             <Text style={[styles.subtitle, dynamicStyles.textSecondary]}>おかえりなさい！</Text>
           </View>
@@ -289,7 +295,7 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 24 },
   header: { alignItems: 'center', paddingTop: 40, paddingBottom: 32 },
-  logo: { fontSize: 64, marginBottom: 8 },
+  logoImage: { width: 80, height: 80, marginBottom: 8 },
   title: { fontSize: 36, fontWeight: 'bold' },
   subtitle: { fontSize: 18, marginTop: 8 },
   form: { flex: 1 },

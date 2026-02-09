@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 
 // Mock user data
@@ -20,16 +23,20 @@ const USER = {
 };
 
 const STATS = [
-  { label: '会話数', value: '128', icon: '💬' },
-  { label: '連続日数', value: '14', icon: '🔥' },
-  { label: '達成目標', value: '23', icon: '🎯' },
+  { label: '会話数', value: '128', iconName: 'chatbubbles' },
+  { label: '連続日数', value: '14', iconName: 'flame' },
+  { label: '達成目標', value: '23', iconName: 'flag' },
 ];
 
-const ACHIEVEMENTS = [
-  { id: 1, name: '初チャット', icon: '🌟', unlocked: true },
-  { id: 2, name: '7日連続', icon: '📅', unlocked: true },
-  { id: 3, name: '習慣マスター', icon: '🏆', unlocked: false },
-  { id: 4, name: '語学の達人', icon: '📚', unlocked: false },
+const ALL_ACHIEVEMENTS = [
+  { id: 1, name: '初チャット', icon: '🌟', unlocked: true, description: '初めてエージェントとチャット' },
+  { id: 2, name: '7日連続', icon: '📅', unlocked: true, description: '7日連続でアプリを使用' },
+  { id: 3, name: '習慣マスター', icon: '🏆', unlocked: false, description: '30日間の習慣を達成' },
+  { id: 4, name: '語学の達人', icon: '📚', unlocked: false, description: '100回のレッスン完了' },
+  { id: 5, name: '早起き鳥', icon: '🐦', unlocked: true, description: '朝6時前にチェックイン' },
+  { id: 6, name: '健康志向', icon: '🥗', unlocked: false, description: '食事を30日間記録' },
+  { id: 7, name: 'メンタルマスター', icon: '🧘', unlocked: false, description: '瞑想を100回完了' },
+  { id: 8, name: '友達100人', icon: '👥', unlocked: false, description: '10人の友達を招待' },
 ];
 
 interface Props {
@@ -38,8 +45,48 @@ interface Props {
 
 export default function ProfileScreen({ navigation }: Props) {
   const { colors, isDark } = useTheme();
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
+  };
+
+  const displayedAchievements = showAllAchievements 
+    ? ALL_ACHIEVEMENTS 
+    : ALL_ACHIEVEMENTS.slice(0, 4);
+
+  const handleEditAvatar = () => {
+    Alert.alert(
+      'プロフィール画像',
+      '画像を変更しますか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: 'カメラで撮影', onPress: () => Alert.alert('カメラ', 'カメラ機能は今後実装予定です') },
+        { text: 'ライブラリから選択', onPress: () => Alert.alert('ライブラリ', 'ライブラリ機能は今後実装予定です') },
+      ]
+    );
+  };
+
+  const handleViewAllAchievements = () => {
+    setShowAllAchievements(!showAllAchievements);
+  };
+
+  const handleViewDetailedStats = () => {
+    navigation.navigate('Stats');
+  };
+
+  const handleInviteFriends = async () => {
+    try {
+      const result = await Share.share({
+        message: 'DoDo Appで一緒に目標達成しよう！🦤\n\nhttps://dodo-app.example.com/invite?ref=takumi',
+        title: 'DoDo Appに招待',
+      });
+      if (result.action === Share.sharedAction) {
+        Alert.alert('招待完了', '友達を招待しました！🎉');
+      }
+    } catch (error) {
+      Alert.alert('エラー', '招待リンクの共有に失敗しました');
+    }
   };
 
   return (
@@ -63,7 +110,7 @@ export default function ProfileScreen({ navigation }: Props) {
                 <Text style={styles.avatarText}>{getInitials(USER.name)}</Text>
               </View>
             )}
-            <TouchableOpacity style={styles.editAvatarButton}>
+            <TouchableOpacity style={styles.editAvatarButton} onPress={handleEditAvatar}>
               <Text style={styles.editAvatarIcon}>📷</Text>
             </TouchableOpacity>
           </View>
@@ -72,7 +119,7 @@ export default function ProfileScreen({ navigation }: Props) {
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{USER.email}</Text>
           
           <View style={[styles.subscriptionBadge, { backgroundColor: isDark ? '#3D2E00' : '#FFF3E0' }]}>
-            <Text style={styles.subscriptionIcon}>✨</Text>
+            <Ionicons name="sparkles" size={14} color="#FB8C00" style={{ marginRight: 6 }} />
             <Text style={styles.subscriptionText}>{USER.subscription}プラン</Text>
           </View>
           
@@ -87,7 +134,7 @@ export default function ProfileScreen({ navigation }: Props) {
         <View style={styles.statsContainer}>
           {STATS.map((stat, index) => (
             <View key={index} style={[styles.statCard, { backgroundColor: colors.card }]}>
-              <Text style={styles.statIcon}>{stat.icon}</Text>
+              <Ionicons name={stat.iconName as any} size={24} color={colors.text} style={{ marginBottom: 8 }} />
               <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
             </View>
@@ -97,13 +144,15 @@ export default function ProfileScreen({ navigation }: Props) {
         {/* Achievements Section */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>実績</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>すべて見る →</Text>
+          <TouchableOpacity onPress={handleViewAllAchievements}>
+            <Text style={styles.seeAllText}>
+              {showAllAchievements ? '閉じる ↑' : 'すべて見る →'}
+            </Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.achievementsContainer}>
-          {ACHIEVEMENTS.map((achievement) => (
+          {displayedAchievements.map((achievement) => (
             <View
               key={achievement.id}
               style={[
@@ -143,13 +192,19 @@ export default function ProfileScreen({ navigation }: Props) {
             <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
+          <TouchableOpacity 
+            style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
+            onPress={handleViewDetailedStats}
+          >
             <Text style={styles.actionIcon}>📊</Text>
             <Text style={[styles.actionText, { color: colors.text }]}>詳細な統計</Text>
             <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
+          <TouchableOpacity 
+            style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
+            onPress={handleInviteFriends}
+          >
             <Text style={styles.actionIcon}>🎁</Text>
             <Text style={[styles.actionText, { color: colors.text }]}>友達を招待</Text>
             <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>

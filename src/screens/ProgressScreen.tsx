@@ -5,17 +5,20 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import StatCard from '../components/StatCard';
 import SimpleChart from '../components/SimpleChart';
-import { useTheme } from '../theme';
+import { useTheme, getAgentCardBackground } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 // Agent data matching HomeScreen
 const AGENTS = [
-  { id: 'diet-coach', name: 'ドードー', emoji: '🦤', color: '#FF9800', bgColor: '#FFF3E0' },
-  { id: 'language-tutor', name: 'ポリー', emoji: '🦜', color: '#81C784', bgColor: '#E8F5E9' },
-  { id: 'habit-coach', name: 'オウル', emoji: '🦉', color: '#BA68C8', bgColor: '#F3E5F5' },
+  { id: 'diet-coach', name: 'ドードー', color: '#FF9800', bgColor: '#FFF3E0' },
+  { id: 'language-tutor', name: 'ポリー', color: '#81C784', bgColor: '#E8F5E9' },
+  { id: 'habit-coach', name: 'オウル', color: '#BA68C8', bgColor: '#F3E5F5' },
 ];
 
 // Mock data
@@ -42,12 +45,12 @@ const GOALS = [
 ];
 
 const BADGES = [
-  { id: '1', emoji: '🔥', name: '7日連続', achieved: true },
-  { id: '2', emoji: '💯', name: '100メッセージ', achieved: true },
-  { id: '3', emoji: '🌟', name: 'オールスター', achieved: false },
-  { id: '4', emoji: '🏆', name: '30日マスター', achieved: false },
-  { id: '5', emoji: '🚀', name: 'ロケットスタート', achieved: true },
-  { id: '6', emoji: '🎯', name: '目標達成', achieved: true },
+  { id: '1', iconName: 'flame', name: '7日連続', achieved: true },
+  { id: '2', iconName: 'checkmark-done', name: '100メッセージ', achieved: true },
+  { id: '3', iconName: 'star', name: 'オールスター', achieved: false },
+  { id: '4', iconName: 'trophy', name: '30日マスター', achieved: false },
+  { id: '5', iconName: 'rocket', name: 'ロケットスタート', achieved: true },
+  { id: '6', iconName: 'flag', name: '目標達成', achieved: true },
 ];
 
 type Period = 'week' | 'month';
@@ -66,7 +69,7 @@ export default function ProgressScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>📊 進捗レポート</Text>
+        <Text style={[styles.title, { color: colors.text }]}>進捗レポート</Text>
         <View style={[styles.periodToggle, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
           <TouchableOpacity
             style={[
@@ -111,7 +114,7 @@ export default function ProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Summary Stats */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 サマリー</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>サマリー</Text>
         <View style={styles.statsGrid}>
           <StatCard
             title="セッション"
@@ -154,35 +157,42 @@ export default function ProgressScreen() {
         </View>
 
         {/* Weekly Activity Chart */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📅 今週の活動</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>今週の活動</Text>
         <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={WEEKLY_DATA} color="#FF9800" height={100} />
         </View>
 
         {/* Agent Stats */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>🐦 エージェント別</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>エージェント別</Text>
         {AGENT_STATS.map((stat) => {
           const agent = getAgentById(stat.id);
           if (!agent) return null;
+          const cardBg = getAgentCardBackground(agent.color, isDark);
           return (
             <View
               key={stat.id}
-              style={[styles.agentCard, { backgroundColor: agent.bgColor }]}
+              style={[styles.agentCard, { backgroundColor: cardBg }]}
             >
               <View style={styles.agentHeader}>
-                <Text style={styles.agentEmoji}>{agent.emoji}</Text>
+                {AGENT_IMAGES[agent.id] ? (
+                  <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.agentImage} />
+                ) : (
+                  <View style={[styles.agentImagePlaceholder, { backgroundColor: agent.color + '40' }]}>
+                    <Text style={styles.agentInitial}>{agent.name[0]}</Text>
+                  </View>
+                )}
                 <View style={styles.agentInfo}>
                   <Text style={[styles.agentName, { color: agent.color }]}>
                     {agent.name}
                   </Text>
                   <View style={styles.agentMeta}>
-                    <Text style={styles.agentStat}>
-                      💬 {stat.sessions}回 · ✉️ {stat.messages}件
+                    <Text style={[styles.agentStat, { color: colors.textSecondary }]}>
+                      {stat.sessions}セッション · {stat.messages}メッセージ
                     </Text>
                   </View>
                 </View>
-                <View style={styles.streakBadge}>
-                  <Text style={styles.streakText}>🔥 {stat.streak}</Text>
+                <View style={[styles.streakBadge, { backgroundColor: isDark ? '#3D2200' : '#FFF3E0' }]}>
+                  <Text style={[styles.streakText, { color: isDark ? '#FFB74D' : '#E65100' }]}>🔥 {stat.streak}</Text>
                 </View>
               </View>
             </View>
@@ -190,13 +200,13 @@ export default function ProgressScreen() {
         })}
 
         {/* Goals Progress */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>🎯 目標達成率</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>目標達成率</Text>
         <View style={[styles.goalsCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={GOALS} color="#BA68C8" type="progress" />
         </View>
 
         {/* Badges */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>🏆 バッジコレクション</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>バッジコレクション</Text>
         <View style={styles.badgesGrid}>
           {BADGES.map((badge) => (
             <View
@@ -207,14 +217,17 @@ export default function ProgressScreen() {
                 !badge.achieved && [styles.badgeItemLocked, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }],
               ]}
             >
-              <Text style={[styles.badgeEmoji, !badge.achieved && styles.badgeEmojiLocked]}>
-                {badge.emoji}
-              </Text>
+              <Ionicons 
+                name={badge.iconName as any} 
+                size={28} 
+                color={badge.achieved ? colors.text : colors.textSecondary} 
+                style={[{ marginBottom: 6 }, !badge.achieved && { opacity: 0.4 }]} 
+              />
               <Text style={[styles.badgeName, { color: colors.text }, !badge.achieved && [styles.badgeNameLocked, { color: colors.textSecondary }]]}>
                 {badge.name}
               </Text>
               {!badge.achieved && (
-                <Text style={styles.badgeLockIcon}>🔒</Text>
+                <Ionicons name="lock-closed" size={10} color={colors.textSecondary} style={{ position: 'absolute', top: 6, right: 6 }} />
               )}
             </View>
           ))}
@@ -222,7 +235,7 @@ export default function ProgressScreen() {
 
         {/* Motivation */}
         <View style={[styles.motivationCard, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
-          <Text style={styles.motivationEmoji}>💪</Text>
+          <Ionicons name="fitness" size={40} color={isDark ? '#81C784' : '#2E7D32'} style={{ marginRight: 16 }} />
           <Text style={[styles.motivationText, { color: isDark ? '#81C784' : '#2E7D32' }]}>
             素晴らしい調子です！{'\n'}
             この調子で続けましょう！
@@ -322,9 +335,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  agentEmoji: {
-    fontSize: 36,
+  agentImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     marginRight: 12,
+  },
+  agentImagePlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  agentInitial: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   agentInfo: {
     flex: 1,

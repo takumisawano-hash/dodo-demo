@@ -10,10 +10,13 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signUp, signInWithOAuth, OAuthProvider } from '../services/supabase';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 interface Props {
   navigation: any;
@@ -161,7 +164,11 @@ export default function RegisterScreen({ navigation }: Props) {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🦤</Text>
+            <Image 
+              source={{ uri: AGENT_IMAGES['diet-coach'] }} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={[styles.title, { color: colors.text }]}>DoDo</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>アカウントを作成しよう</Text>
           </View>
@@ -288,13 +295,21 @@ export default function RegisterScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* Terms */}
-            <Text style={styles.termsText}>
-              アカウントを作成することで、
-              <Text style={styles.termsLink}>利用規約</Text>
-              と
-              <Text style={styles.termsLink}>プライバシーポリシー</Text>
-              に同意したものとみなされます。
-            </Text>
+            <View style={styles.termsContainer}>
+              <Text style={[styles.termsText, { color: colors.textTertiary }]}>
+                アカウントを作成することで、
+              </Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://dodo-app.com/terms')}>
+                <Text style={[styles.termsLink, { color: colors.primary }]}>利用規約</Text>
+              </TouchableOpacity>
+              <Text style={[styles.termsText, { color: colors.textTertiary }]}>と</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://dodo-app.com/privacy')}>
+                <Text style={[styles.termsLink, { color: colors.primary }]}>プライバシーポリシー</Text>
+              </TouchableOpacity>
+              <Text style={[styles.termsText, { color: colors.textTertiary }]}>
+                に同意したものとみなされます。
+              </Text>
+            </View>
 
             {/* Divider */}
             <View style={styles.divider}>
@@ -366,8 +381,9 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 24,
   },
-  logo: {
-    fontSize: 56,
+  logoImage: {
+    width: 72,
+    height: 72,
     marginBottom: 4,
   },
   title: {
@@ -462,16 +478,25 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.7,
   },
+  termsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
   termsText: {
     fontSize: 12,
     color: '#888',
-    textAlign: 'center',
-    marginTop: 16,
     lineHeight: 18,
   },
   termsLink: {
+    fontSize: 12,
     color: '#FF9800',
     fontWeight: '500',
+    lineHeight: 18,
+    marginHorizontal: 2,
   },
   divider: {
     flexDirection: 'row',

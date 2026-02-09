@@ -208,22 +208,26 @@ const QuickActions = ({
   color,
   onSelect,
   isFirstTime,
+  colors,
+  isDark,
 }: {
   agentId: string;
   color: string;
   onSelect: (message: string) => void;
   isFirstTime: boolean;
+  colors: any;
+  isDark: boolean;
 }) => {
   const actions = getQuickActions(agentId);
 
   if (isFirstTime) {
     return (
-      <View style={styles.quickActionsFirstTimeWrapper}>
+      <View style={[styles.quickActionsFirstTimeWrapper, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.quickActionsFirstTimeHeader}>
-          <Text style={styles.quickActionsFirstTimeTitle}>
+          <Text style={[styles.quickActionsFirstTimeTitle, { color: colors.text }]}>
             {t('chat.quickActions.firstTimeTitle')}
           </Text>
-          <Text style={styles.quickActionsFirstTimeSubtitle}>
+          <Text style={[styles.quickActionsFirstTimeSubtitle, { color: colors.textSecondary }]}>
             {t('chat.quickActions.firstTimeSubtitle')}
           </Text>
         </View>
@@ -249,7 +253,7 @@ const QuickActions = ({
   }
 
   return (
-    <View style={styles.quickActionsWrapper}>
+    <View style={[styles.quickActionsWrapper, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -258,7 +262,7 @@ const QuickActions = ({
         {actions.map((action) => (
           <TouchableOpacity
             key={action.id}
-            style={[styles.quickActionButton, { borderColor: color }]}
+            style={[styles.quickActionButton, { borderColor: color, backgroundColor: colors.card }]}
             onPress={() => onSelect(action.messageKey)}
             activeOpacity={0.7}
           >
@@ -719,7 +723,16 @@ export default function ChatScreen({ route, navigation }: Props) {
 
         <TouchableOpacity
           style={styles.menuButton}
-          onPress={() => Alert.alert(t('chat.menu'), t('chat.menuPreparing'))}
+          onPress={() => Alert.alert(
+            'メニュー',
+            undefined,
+            [
+              { text: '会話をクリア', onPress: () => setMessages([generateWelcomeMessage(agent)]) },
+              { text: 'コーチ情報', onPress: () => navigation.navigate('AgentDetail', { agent }) },
+              { text: '設定', onPress: () => navigation.navigate('Settings') },
+              { text: 'キャンセル', style: 'cancel' },
+            ]
+          )}
         >
           <Text style={styles.menuButtonText}>⋮</Text>
         </TouchableOpacity>
@@ -731,6 +744,8 @@ export default function ChatScreen({ route, navigation }: Props) {
         color={agent.color}
         onSelect={(message) => sendMessage(message)}
         isFirstTime={isFirstConversation}
+        colors={colors}
+        isDark={isDark}
       />
 
       {/* メッセージリスト */}
@@ -915,9 +930,9 @@ const styles = StyleSheet.create({
   },
 
   quickActionsWrapper: {
-    backgroundColor: '#FAFAFA',
+    // backgroundColor set dynamically
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    // borderBottomColor set dynamically
   },
   quickActionsContainer: {
     paddingHorizontal: 12,
@@ -929,7 +944,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: 'white',
+    // backgroundColor set dynamically
     marginRight: 8,
   },
   quickActionText: {
@@ -938,9 +953,9 @@ const styles = StyleSheet.create({
   },
 
   quickActionsFirstTimeWrapper: {
-    backgroundColor: '#FAFAFA',
+    // backgroundColor set dynamically
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    // borderBottomColor set dynamically
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
@@ -951,12 +966,12 @@ const styles = StyleSheet.create({
   quickActionsFirstTimeTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    // color set dynamically
     marginBottom: 4,
   },
   quickActionsFirstTimeSubtitle: {
     fontSize: 12,
-    color: '#888',
+    // color set dynamically
   },
   quickActionsFirstTimeGrid: {
     flexDirection: 'row',

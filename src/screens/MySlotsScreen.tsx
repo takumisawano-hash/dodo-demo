@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useSlots, Agent } from '../context/SlotsContext';
 import { useTheme } from '../theme';
@@ -307,10 +308,10 @@ export default function MySlotsScreen({ navigation, route }: Props) {
         </View>
 
         {/* スロット一覧 */}
-        <Text style={styles.sectionTitle}>スロット一覧</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>スロット一覧</Text>
         
         {slots.map((agent, index) => (
-          <View key={index} style={styles.slotCard}>
+          <View key={index} style={[styles.slotCard, { backgroundColor: colors.card }]}>
             <View style={styles.slotNumber}>
               <Text style={styles.slotNumberText}>{index + 1}</Text>
             </View>
@@ -326,8 +327,11 @@ export default function MySlotsScreen({ navigation, route }: Props) {
                 </View>
                 <View style={styles.agentInfo}>
                   <Text style={[styles.agentName, { color: agent.color }]}>{agent.name}</Text>
-                  <Text style={styles.agentRole}>{agent.role}</Text>
-                  <Text style={styles.agentFeature}>✨ {agent.killerFeature}</Text>
+                  <Text style={[styles.agentRole, { color: colors.textSecondary }]}>{agent.role}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="sparkles" size={11} color={colors.textTertiary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.agentFeature, { color: colors.textTertiary }]}>{agent.killerFeature}</Text>
+                  </View>
                 </View>
                 <View style={styles.slotActions}>
                   <TouchableOpacity 
@@ -349,11 +353,11 @@ export default function MySlotsScreen({ navigation, route }: Props) {
                 style={styles.emptySlot}
                 onPress={() => openSwapModal(index)}
               >
-                <View style={styles.addIcon}>
-                  <Text style={styles.addIconText}>＋</Text>
+                <View style={[styles.addIcon, { backgroundColor: isDark ? '#333' : '#F5F5F5', borderColor: colors.border }]}>
+                  <Text style={[styles.addIconText, { color: colors.textTertiary }]}>＋</Text>
                 </View>
-                <Text style={styles.emptySlotText}>コーチを追加</Text>
-                <Text style={styles.emptySlotHint}>タップして選択</Text>
+                <Text style={[styles.emptySlotText, { color: colors.textSecondary }]}>コーチを追加</Text>
+                <Text style={[styles.emptySlotHint, { color: colors.textTertiary }]}>タップして選択</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -410,7 +414,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
 
         {/* フッター */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             💡 スロットはいつでも入れ替え可能です
           </Text>
         </View>
@@ -424,9 +428,9 @@ export default function MySlotsScreen({ navigation, route }: Props) {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>コーチを選択</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>コーチを選択</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Text style={styles.modalClose}>✕</Text>
               </TouchableOpacity>
@@ -456,14 +460,17 @@ export default function MySlotsScreen({ navigation, route }: Props) {
                   <View style={styles.optionInfo}>
                     <Text style={[styles.optionName, { color: item.color }]}>{item.name}</Text>
                     <Text style={styles.optionRole}>{item.role}</Text>
-                    <Text style={styles.optionFeature}>✨ {item.killerFeature}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons name="sparkles" size={11} color="#888" style={{ marginRight: 4 }} />
+                      <Text style={styles.optionFeature}>{item.killerFeature}</Text>
+                    </View>
                   </View>
                   <Text style={styles.selectArrow}>→</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <View style={styles.emptyList}>
-                  <Text style={styles.emptyListText}>すべてのコーチが割り当て済みです</Text>
+                  <Text style={[styles.emptyListText, { color: colors.textSecondary }]}>すべてのコーチが割り当て済みです</Text>
                 </View>
               }
             />

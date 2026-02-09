@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, useI18n, formatDate } from '../i18n';
-import { useTheme } from '../theme';
+import { useTheme, ThemeMode } from '../theme';
 import { ErrorToast, useErrorHandler } from '../components/ErrorDisplay';
 import { notificationService } from '../services/notifications';
 
@@ -22,7 +22,7 @@ interface Props {
 
 export default function SettingsScreen({ navigation }: Props) {
   const { language, setLanguage: changeLanguage, availableLanguages } = useI18n();
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, themeMode, setThemeMode } = useTheme();
   const { error, handleError, clearError } = useErrorHandler();
   
   // Settings state
@@ -112,6 +112,36 @@ export default function SettingsScreen({ navigation }: Props) {
       undefined,
       buttons
     );
+  };
+
+  const handleThemeModeChange = () => {
+    const themeModeLabels: Record<ThemeMode, string> = {
+      system: 'システム設定に従う',
+      light: 'ライトモード',
+      dark: 'ダークモード',
+    };
+
+    const buttons: Array<{ text: string; onPress: () => void }> = [
+      { text: 'システム設定に従う', onPress: () => setThemeMode('system') },
+      { text: 'ライトモード', onPress: () => setThemeMode('light') },
+      { text: 'ダークモード', onPress: () => setThemeMode('dark') },
+    ];
+    buttons.push({ text: t('common.cancel'), onPress: () => {} });
+
+    Alert.alert(
+      '外観モード',
+      `現在: ${themeModeLabels[themeMode]}`,
+      buttons
+    );
+  };
+
+  const getThemeModeLabel = (): string => {
+    switch (themeMode) {
+      case 'system': return 'システム';
+      case 'light': return 'ライト';
+      case 'dark': return 'ダーク';
+      default: return 'システム';
+    }
   };
 
   const handleOpenLink = async (url: string) => {
@@ -260,11 +290,8 @@ export default function SettingsScreen({ navigation }: Props) {
           <SettingRow
             icon="🌙"
             title={t('settings.darkMode')}
-            subtitle={isDark ? 'ダークモード有効' : 'システム設定に従う'}
-            isSwitch
-            switchValue={isDark}
-            onSwitchChange={() => {}}
-            disabled={true}
+            value={getThemeModeLabel()}
+            onPress={handleThemeModeChange}
           />
         </View>
 
