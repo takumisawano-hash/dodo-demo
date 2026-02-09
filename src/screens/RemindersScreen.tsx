@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../theme';
 
 interface Props {
   navigation: any;
@@ -104,6 +105,7 @@ const formatTime = (time: string): string => {
 };
 
 export default function RemindersScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
@@ -183,12 +185,12 @@ export default function RemindersScreen({ navigation }: Props) {
 
   // リマインダーカードのレンダリング
   const renderReminderCard = ({ item }: { item: Reminder }) => (
-    <View style={[styles.card, !item.enabled && styles.cardDisabled]}>
+    <View style={[styles.card, { backgroundColor: colors.card }, !item.enabled && [styles.cardDisabled, { backgroundColor: isDark ? '#1A1A1A' : '#F8F8F8' }]]}>
       {/* ヘッダー: エージェント名 + スイッチ */}
       <View style={styles.cardHeader}>
         <View style={styles.agentInfo}>
           <Text style={styles.agentEmoji}>{item.agentEmoji}</Text>
-          <Text style={[styles.agentName, !item.enabled && styles.textDisabled]}>
+          <Text style={[styles.agentName, { color: colors.text }, !item.enabled && [styles.textDisabled, { color: colors.textSecondary }]]}>
             {item.agentName}
           </Text>
         </View>
@@ -203,27 +205,27 @@ export default function RemindersScreen({ navigation }: Props) {
       {/* 時間と曜日 */}
       <View style={styles.scheduleRow}>
         <Text style={styles.scheduleIcon}>⏰</Text>
-        <Text style={[styles.scheduleText, !item.enabled && styles.textDisabled]}>
+        <Text style={[styles.scheduleText, { color: colors.textSecondary }, !item.enabled && styles.textDisabled]}>
           {formatDays(item.days)} {formatTime(item.time)}
         </Text>
       </View>
 
       {/* メッセージ */}
-      <Text style={[styles.message, !item.enabled && styles.textDisabled]}>
+      <Text style={[styles.message, { color: colors.text }, !item.enabled && [styles.textDisabled, { color: colors.textSecondary }]]}>
         「{item.message}」
       </Text>
 
       {/* アクションボタン */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: isDark ? '#333' : '#F0F0F0' }]}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' }]}
           onPress={() => openEditModal(item)}
         >
           <Text style={styles.actionIcon}>✏️</Text>
-          <Text style={styles.actionText}>編集</Text>
+          <Text style={[styles.actionText, { color: colors.textSecondary }]}>編集</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionButton, styles.deleteButton]}
+          style={[styles.actionButton, styles.deleteButton, { backgroundColor: isDark ? '#3D1B1B' : '#FFF0F0' }]}
           onPress={() => handleDelete(item)}
         >
           <Text style={styles.actionIcon}>🗑️</Text>
@@ -237,8 +239,8 @@ export default function RemindersScreen({ navigation }: Props) {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyEmoji}>🔔</Text>
-      <Text style={styles.emptyTitle}>リマインダーはまだありません</Text>
-      <Text style={styles.emptyDescription}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>リマインダーはまだありません</Text>
+      <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
         エージェントからの通知を設定して{'\n'}
         日々の習慣をサポートしましょう
       </Text>
@@ -249,16 +251,16 @@ export default function RemindersScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* ヘッダー */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>リマインダー</Text>
+        <Text style={[styles.title, { color: colors.text }]}>リマインダー</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddReminder}>
           <Text style={styles.addIcon}>+</Text>
         </TouchableOpacity>
@@ -285,15 +287,15 @@ export default function RemindersScreen({ navigation }: Props) {
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>リマインダーを編集</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>リマインダーを編集</Text>
 
             {editingReminder && (
               <View style={styles.modalAgent}>
                 <Text style={styles.modalAgentEmoji}>
                   {editingReminder.agentEmoji}
                 </Text>
-                <Text style={styles.modalAgentName}>
+                <Text style={[styles.modalAgentName, { color: colors.text }]}>
                   {editingReminder.agentName}
                 </Text>
               </View>
@@ -301,12 +303,13 @@ export default function RemindersScreen({ navigation }: Props) {
 
             {/* 時間入力 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>時間 (HH:MM)</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>時間 (HH:MM)</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5', color: colors.text }]}
                 value={editTime}
                 onChangeText={setEditTime}
                 placeholder="08:00"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="numbers-and-punctuation"
                 maxLength={5}
               />
@@ -314,12 +317,13 @@ export default function RemindersScreen({ navigation }: Props) {
 
             {/* メッセージ入力 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>メッセージ</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>メッセージ</Text>
               <TextInput
-                style={[styles.input, styles.inputMultiline]}
+                style={[styles.input, styles.inputMultiline, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5', color: colors.text }]}
                 value={editMessage}
                 onChangeText={setEditMessage}
                 placeholder="リマインダーメッセージ"
+                placeholderTextColor={colors.textSecondary}
                 multiline
                 numberOfLines={3}
               />
@@ -328,10 +332,10 @@ export default function RemindersScreen({ navigation }: Props) {
             {/* モーダルボタン */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: isDark ? '#2A2A2A' : '#F0F0F0' }]}
                 onPress={() => setEditModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>キャンセル</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>キャンセル</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.saveButton]}

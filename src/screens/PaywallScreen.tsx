@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { purchaseService } from '../services/purchases';
+import { useTheme } from '../theme';
 
 interface Props {
   navigation: any;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function PaywallScreen({ navigation, route }: Props) {
+  const { colors, isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   
   const reason = route?.params?.reason || 'message_limit';
@@ -106,28 +108,28 @@ export default function PaywallScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={handleDismiss}>
-        <Text style={styles.closeButtonText}>✕</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <TouchableOpacity style={[styles.closeButton, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]} onPress={handleDismiss}>
+        <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
       </TouchableOpacity>
 
       <View style={styles.content}>
         {/* Main Message */}
         <Text style={styles.emoji}>{message.emoji}</Text>
-        <Text style={styles.title}>{message.title}</Text>
-        <Text style={styles.description}>{message.description}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{message.title}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>{message.description}</Text>
 
         {/* Features Preview */}
-        <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>Basicプランで得られるもの</Text>
+        <View style={[styles.featuresContainer, { backgroundColor: colors.card }]}>
+          <Text style={[styles.featuresTitle, { color: colors.text }]}>Basicプランで得られるもの</Text>
           <FeatureItem emoji="💬" text="無制限メッセージ" />
           <FeatureItem emoji="🦤" text="全エージェント利用可能" />
           <FeatureItem emoji="📧" text="メールサポート" />
         </View>
 
         {/* Trial Banner */}
-        <View style={styles.trialBanner}>
-          <Text style={styles.trialText}>🎁 7日間無料トライアル実施中</Text>
+        <View style={[styles.trialBanner, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
+          <Text style={[styles.trialText, { color: isDark ? '#81C784' : '#2E7D32' }]}>🎁 7日間無料トライアル実施中</Text>
         </View>
       </View>
 
@@ -150,7 +152,7 @@ export default function PaywallScreen({ navigation, route }: Props) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.secondaryButton}
+          style={[styles.secondaryButton, { backgroundColor: colors.card, borderColor: '#FF9800' }]}
           onPress={handleUpgrade}
           activeOpacity={0.8}
           disabled={isLoading}
@@ -164,7 +166,7 @@ export default function PaywallScreen({ navigation, route }: Props) {
           activeOpacity={0.8}
           disabled={isLoading}
         >
-          <Text style={styles.dismissButtonText}>今はスキップ</Text>
+          <Text style={[styles.dismissButtonText, { color: colors.textSecondary }]}>今はスキップ</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -172,10 +174,11 @@ export default function PaywallScreen({ navigation, route }: Props) {
 }
 
 function FeatureItem({ emoji, text }: { emoji: string; text: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.featureItem}>
       <Text style={styles.featureEmoji}>{emoji}</Text>
-      <Text style={styles.featureText}>{text}</Text>
+      <Text style={[styles.featureText, { color: colors.textSecondary }]}>{text}</Text>
     </View>
   );
 }

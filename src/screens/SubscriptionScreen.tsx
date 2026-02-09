@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlanCard, { Plan } from '../components/PlanCard';
 import { purchaseService, SubscriptionStatus } from '../services/purchases';
+import { useTheme } from '../theme';
 
 const PLANS: Plan[] = [
   {
@@ -60,6 +61,7 @@ interface Props {
 }
 
 export default function SubscriptionScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[1]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -153,7 +155,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -161,8 +163,8 @@ export default function SubscriptionScreen({ navigation }: Props) {
         >
           <Text style={styles.backButtonText}>← 戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>🦤 プランを選択</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.text }]}>🦤 プランを選択</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           あなたに合ったプランを見つけましょう
         </Text>
       </View>
@@ -173,11 +175,11 @@ export default function SubscriptionScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Trial Banner */}
-        <View style={styles.trialBanner}>
+        <View style={[styles.trialBanner, { backgroundColor: isDark ? '#3D2E00' : '#FFF3E0' }]}>
           <Text style={styles.trialEmoji}>🎁</Text>
           <View style={styles.trialTextContainer}>
-            <Text style={styles.trialTitle}>7日間無料トライアル</Text>
-            <Text style={styles.trialDescription}>
+            <Text style={[styles.trialTitle, { color: isDark ? '#FFB74D' : '#E65100' }]}>7日間無料トライアル</Text>
+            <Text style={[styles.trialDescription, { color: isDark ? '#FFA726' : '#F57C00' }]}>
               Basicプランを無料でお試し！いつでもキャンセル可能
             </Text>
           </View>
@@ -194,13 +196,13 @@ export default function SubscriptionScreen({ navigation }: Props) {
         ))}
 
         {/* Comparison Table */}
-        <View style={styles.comparisonTable}>
-          <Text style={styles.comparisonTitle}>プラン比較</Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCell, styles.tableHeaderCell, styles.featureCell]}>機能</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Free</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Basic</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Pro</Text>
+        <View style={[styles.comparisonTable, { backgroundColor: colors.card }]}>
+          <Text style={[styles.comparisonTitle, { color: colors.text }]}>プラン比較</Text>
+          <View style={[styles.tableHeader, { borderBottomColor: isDark ? '#444' : '#E0E0E0' }]}>
+            <Text style={[styles.tableCell, styles.tableHeaderCell, styles.featureCell, { color: colors.text }]}>機能</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderCell, { color: colors.text }]}>Free</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderCell, { color: colors.text }]}>Basic</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderCell, { color: colors.text }]}>Pro</Text>
           </View>
           
           <ComparisonRow feature="メッセージ" values={['3/日', '無制限', '無制限']} />
@@ -212,11 +214,11 @@ export default function SubscriptionScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Subscribe Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: isDark ? '#333' : '#E0E0E0' }]}>
         {/* Current subscription badge */}
         {currentSubscription?.currentPlan && currentSubscription.currentPlan !== 'free' && (
-          <View style={styles.currentPlanBadge}>
-            <Text style={styles.currentPlanText}>
+          <View style={[styles.currentPlanBadge, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
+            <Text style={[styles.currentPlanText, { color: isDark ? '#81C784' : '#2E7D32' }]}>
               現在のプラン: {currentSubscription.currentPlan.toUpperCase()}
             </Text>
           </View>
@@ -258,7 +260,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
           )}
         </TouchableOpacity>
         
-        <Text style={styles.footerNote}>
+        <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
           いつでもキャンセル可能 • 自動更新
         </Text>
       </View>
@@ -267,17 +269,19 @@ export default function SubscriptionScreen({ navigation }: Props) {
 }
 
 function ComparisonRow({ feature, values }: { feature: string; values: string[] }) {
+  const { colors, isDark } = useTheme();
   return (
-    <View style={styles.tableRow}>
-      <Text style={[styles.tableCell, styles.featureCell]}>{feature}</Text>
+    <View style={[styles.tableRow, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
+      <Text style={[styles.tableCell, styles.featureCell, { color: colors.text }]}>{feature}</Text>
       {values.map((value, index) => (
         <Text 
           key={index} 
           style={[
             styles.tableCell, 
             styles.valueCell,
+            { color: colors.textSecondary },
             value === '○' && styles.checkValue,
-            value === '✕' && styles.crossValue,
+            value === '✕' && [styles.crossValue, { color: isDark ? '#666' : '#BDBDBD' }],
           ]}
         >
           {value}

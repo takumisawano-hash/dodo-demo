@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signUp, signInWithOAuth, OAuthProvider } from '../services/supabase';
+import { useTheme } from '../theme';
 
 interface Props {
   navigation: any;
@@ -26,6 +27,7 @@ interface FormErrors {
 }
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -147,7 +149,7 @@ export default function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -160,19 +162,19 @@ export default function RegisterScreen({ navigation }: Props) {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.logo}>🦤</Text>
-            <Text style={styles.title}>DoDo</Text>
-            <Text style={styles.subtitle}>アカウントを作成しよう</Text>
+            <Text style={[styles.title, { color: colors.text }]}>DoDo</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>アカウントを作成しよう</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Name Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>名前</Text>
+              <Text style={[styles.label, { color: colors.text }]}>名前</Text>
               <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0', color: colors.text }, errors.name && styles.inputError]}
                 placeholder="山田 太郎"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
@@ -186,11 +188,11 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>メールアドレス</Text>
+              <Text style={[styles.label, { color: colors.text }]}>メールアドレス</Text>
               <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0', color: colors.text }, errors.email && styles.inputError]}
                 placeholder="example@email.com"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -206,12 +208,12 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>パスワード</Text>
+              <Text style={[styles.label, { color: colors.text }]}>パスワード</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
-                  style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
+                  style={[styles.input, styles.passwordInput, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0', color: colors.text }, errors.password && styles.inputError]}
                   placeholder="8文字以上（大文字・小文字・数字）"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textSecondary}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -246,12 +248,12 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* Confirm Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>パスワード確認</Text>
+              <Text style={[styles.label, { color: colors.text }]}>パスワード確認</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
-                  style={[styles.input, styles.passwordInput, errors.confirmPassword && styles.inputError]}
+                  style={[styles.input, styles.passwordInput, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0', color: colors.text }, errors.confirmPassword && styles.inputError]}
                   placeholder="パスワードを再入力"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textSecondary}
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -296,9 +298,9 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>または</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: isDark ? '#444' : '#E0E0E0' }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>または</Text>
+              <View style={[styles.dividerLine, { backgroundColor: isDark ? '#444' : '#E0E0E0' }]} />
             </View>
 
             {/* Social Signup */}
@@ -318,16 +320,16 @@ export default function RegisterScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.socialButton, styles.googleButton, socialLoading === 'google' && styles.buttonDisabled]}
+              style={[styles.socialButton, styles.googleButton, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0' }, socialLoading === 'google' && styles.buttonDisabled]}
               onPress={() => handleSocialSignup('google')}
               disabled={isLoading || socialLoading !== null}
             >
               {socialLoading === 'google' ? (
-                <ActivityIndicator color="#333" />
+                <ActivityIndicator color={colors.text} />
               ) : (
                 <>
                   <Text style={styles.socialIcon}>G</Text>
-                  <Text style={[styles.socialButtonText, styles.googleButtonText]}>Googleで登録</Text>
+                  <Text style={[styles.socialButtonText, styles.googleButtonText, { color: colors.text }]}>Googleで登録</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -335,7 +337,7 @@ export default function RegisterScreen({ navigation }: Props) {
 
           {/* Login Link */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>すでにアカウントをお持ちですか？</Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>すでにアカウントをお持ちですか？</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
               <Text style={styles.footerLink}>ログイン</Text>
             </TouchableOpacity>

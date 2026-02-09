@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SimpleChart from '../components/SimpleChart';
 import { AGENT_IMAGES } from '../data/agentImages';
+import { useTheme } from '../theme';
 
 // Agent type definition
 interface Agent {
@@ -231,6 +232,7 @@ const getChartTitle = (agentId: string) => {
 };
 
 export default function AgentDashboardScreen({ navigation, route }: Props) {
+  const { colors, isDark } = useTheme();
   const { agent } = route.params;
   const data = getAgentData(agent.id);
   const chartTitle = getChartTitle(agent.id);
@@ -245,18 +247,18 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
     <View style={styles.historyItem}>
       <Text style={styles.historyEmoji}>{item.emoji}</Text>
       <View style={styles.historyContent}>
-        <Text style={styles.historyText}>{item.text}</Text>
-        <Text style={styles.historyDate}>{item.date}</Text>
+        <Text style={[styles.historyText, { color: colors.text }]}>{item.text}</Text>
+        <Text style={[styles.historyDate, { color: colors.textSecondary }]}>{item.date}</Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>← 戻る</Text>
+          <Text style={[styles.backText, { color: colors.textSecondary }]}>← 戻る</Text>
         </TouchableOpacity>
         <View style={styles.headerTitle}>
           {AGENT_IMAGES[agent.id] ? (
@@ -275,8 +277,8 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Main Metric - Large Display */}
-        <View style={[styles.mainMetricCard, { backgroundColor: agent.color + '20' }]}>
-          <Text style={styles.mainMetricLabel}>{data.mainMetric.label}</Text>
+        <View style={[styles.mainMetricCard, { backgroundColor: agent.color + (isDark ? '30' : '20') }]}>
+          <Text style={[styles.mainMetricLabel, { color: colors.textSecondary }]}>{data.mainMetric.label}</Text>
           <View style={styles.mainMetricValueRow}>
             <Text style={[styles.mainMetricValue, { color: agent.color }]}>
               {data.mainMetric.value}
@@ -288,16 +290,16 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         </View>
 
         {/* Weekly Chart */}
-        <Text style={styles.sectionTitle}>📊 {chartTitle}</Text>
-        <View style={styles.chartCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 {chartTitle}</Text>
+        <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={chartData} color={agent.color} height={120} />
         </View>
 
         {/* Extra chart for fitness (body parts) */}
         {agent.id === 'fitness-coach' && 'bodyParts' in data && (
           <>
-            <Text style={styles.sectionTitle}>💪 部位別ボリューム</Text>
-            <View style={styles.chartCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>💪 部位別ボリューム</Text>
+            <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof FITNESS_DATA).bodyParts}
                 color={agent.color}
@@ -310,8 +312,8 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for money (categories) */}
         {agent.id === 'money-coach' && 'categories' in data && (
           <>
-            <Text style={styles.sectionTitle}>📊 カテゴリ別支出</Text>
-            <View style={styles.chartCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 カテゴリ別支出</Text>
+            <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof MONEY_DATA).categories}
                 color={agent.color}
@@ -324,8 +326,8 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for sleep (quality) */}
         {agent.id === 'sleep-coach' && 'quality' in data && (
           <>
-            <Text style={styles.sectionTitle}>🌙 睡眠の質</Text>
-            <View style={styles.chartCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>🌙 睡眠の質</Text>
+            <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof SLEEP_DATA).quality}
                 color={agent.color}
@@ -338,8 +340,8 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for mental (mood summary) */}
         {agent.id === 'mental-coach' && 'moodSummary' in data && (
           <>
-            <Text style={styles.sectionTitle}>😊 週間ムードサマリー</Text>
-            <View style={styles.chartCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>😊 週間ムードサマリー</Text>
+            <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof MENTAL_DATA).moodSummary}
                 color={agent.color}
@@ -350,15 +352,15 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         )}
 
         {/* Detail Metrics */}
-        <Text style={styles.sectionTitle}>📈 詳細指標</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 詳細指標</Text>
         <View style={styles.detailsGrid}>
           {data.details.map((detail, index) => (
             <View
               key={index}
-              style={[styles.detailCard, { backgroundColor: agent.color + '15' }]}
+              style={[styles.detailCard, { backgroundColor: agent.color + (isDark ? '25' : '15') }]}
             >
               <Text style={styles.detailIcon}>{detail.icon}</Text>
-              <Text style={styles.detailLabel}>{detail.label}</Text>
+              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>{detail.label}</Text>
               <Text style={[styles.detailValue, { color: agent.color }]}>
                 {detail.value}
               </Text>
@@ -367,8 +369,8 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         </View>
 
         {/* History */}
-        <Text style={styles.sectionTitle}>📋 最近の記録</Text>
-        <View style={styles.historyCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📋 最近の記録</Text>
+        <View style={[styles.historyCard, { backgroundColor: colors.card }]}>
           <FlatList
             data={data.history}
             renderItem={renderHistoryItem}

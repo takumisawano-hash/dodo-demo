@@ -13,6 +13,7 @@ import NotificationItem, {
   NotificationData, 
   NotificationType 
 } from '../components/NotificationItem';
+import { useTheme } from '../theme';
 
 // Mock notification data
 const MOCK_NOTIFICATIONS: NotificationData[] = [
@@ -125,6 +126,7 @@ const groupByDate = (notifications: NotificationData[]) => {
 };
 
 export default function NotificationsScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [notifications, setNotifications] = useState<NotificationData[]>(MOCK_NOTIFICATIONS);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -210,7 +212,7 @@ export default function NotificationsScreen({ navigation }: Props) {
       if (item.type === 'header') {
         return (
           <View style={styles.dateHeader}>
-            <Text style={styles.dateHeaderText}>{item.data as string}</Text>
+            <Text style={[styles.dateHeaderText, { color: colors.textSecondary }]}>{item.data as string}</Text>
           </View>
         );
       }
@@ -239,17 +241,17 @@ export default function NotificationsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: colors.card }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.title}>通知</Text>
+          <Text style={[styles.title, { color: colors.text }]}>通知</Text>
           {unreadCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{unreadCount}</Text>
@@ -279,8 +281,8 @@ export default function NotificationsScreen({ navigation }: Props) {
       {notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🔔</Text>
-          <Text style={styles.emptyTitle}>通知はありません</Text>
-          <Text style={styles.emptyMessage}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>通知はありません</Text>
+          <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
             新しい通知が届くとここに表示されます
           </Text>
         </View>
@@ -305,7 +307,7 @@ export default function NotificationsScreen({ navigation }: Props) {
       {/* Swipe hint */}
       {notifications.length > 0 && (
         <View style={styles.hintContainer}>
-          <Text style={styles.hintText}>← 左にスワイプで削除</Text>
+          <Text style={[styles.hintText, { color: colors.textSecondary, backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(250,250,250,0.9)' }]}>← 左にスワイプで削除</Text>
         </View>
       )}
     </SafeAreaView>

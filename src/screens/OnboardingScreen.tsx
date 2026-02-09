@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -86,6 +87,7 @@ interface Props {
 }
 
 export default function OnboardingScreen({ onComplete }: Props) {
+  const { colors, isDark } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
@@ -140,40 +142,40 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
   // ステップ2: 機能紹介
   const renderFeatures = (item: OnboardingSlide) => (
-    <View style={[styles.slide, { backgroundColor: item.bgColor }]}>
+    <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
         
         <View style={styles.featuresContainer}>
-          <View style={styles.featureRow}>
+          <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📝</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={styles.featureCheck}>✅ 毎日の記録をサポート</Text>
-              <Text style={styles.featureDesc}>活動や気分を簡単に記録</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 毎日の記録をサポート</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>活動や気分を簡単に記録</Text>
             </View>
           </View>
           
-          <View style={styles.featureRow}>
+          <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📅</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={styles.featureCheck}>✅ 週間プランを自動作成</Text>
-              <Text style={styles.featureDesc}>あなたに合った計画を提案</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 週間プランを自動作成</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>あなたに合った計画を提案</Text>
             </View>
           </View>
           
-          <View style={styles.featureRow}>
+          <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>🔔</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={styles.featureCheck}>✅ リマインダーで習慣化</Text>
-              <Text style={styles.featureDesc}>忘れずに続けられる</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ リマインダーで習慣化</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>忘れずに続けられる</Text>
             </View>
           </View>
           
-          <View style={styles.featureRow}>
+          <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📊</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={styles.featureCheck}>✅ 進捗を可視化</Text>
-              <Text style={styles.featureDesc}>成長が目に見える</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 進捗を可視化</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>成長が目に見える</Text>
             </View>
           </View>
         </View>
@@ -221,11 +223,11 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
   // ステップ4: エージェント選択
   const renderSelectAgent = (item: OnboardingSlide) => (
-    <View style={[styles.slide, { backgroundColor: item.bgColor }]}>
+    <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
         <Text style={styles.selectEmoji}>🎯</Text>
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={styles.selectSubtitle}>{item.subtitle}</Text>
+        <Text style={[styles.selectSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
         
         <View style={styles.agentsContainer}>
           {POPULAR_AGENTS.map((agent) => (
@@ -233,6 +235,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               key={agent.id}
               style={[
                 styles.agentCard,
+                { backgroundColor: colors.card },
                 selectedAgent === agent.id && styles.agentCardSelected,
                 selectedAgent === agent.id && { borderColor: agent.color },
               ]}
@@ -242,8 +245,8 @@ export default function OnboardingScreen({ onComplete }: Props) {
               <View style={[styles.agentAvatarContainer, { backgroundColor: agent.color + '20' }]}>
                 <Text style={styles.agentCardEmoji}>{agent.emoji}</Text>
               </View>
-              <Text style={styles.agentName}>{agent.name}</Text>
-              <Text style={styles.agentDescription}>{agent.description}</Text>
+              <Text style={[styles.agentName, { color: colors.text }]}>{agent.name}</Text>
+              <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{agent.description}</Text>
               {selectedAgent === agent.id && (
                 <View style={[styles.selectedBadge, { backgroundColor: agent.color }]}>
                   <Text style={styles.selectedBadgeText}>✓</Text>
@@ -311,16 +314,16 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const showNextButton = !isLastSlide; // 最後はエージェント選択で完了
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         {!isLastSlide && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>スキップ</Text>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>スキップ</Text>
           </TouchableOpacity>
         )}
         {isLastSlide && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>あとで選ぶ</Text>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>あとで選ぶ</Text>
           </TouchableOpacity>
         )}
       </View>

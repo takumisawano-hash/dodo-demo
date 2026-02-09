@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, useI18n, formatCurrency } from '../i18n';
+import { useTheme } from '../theme';
 
 interface Plan {
   id: string;
@@ -94,6 +95,7 @@ interface Props {
 }
 
 export default function PricingScreen({ navigation, route }: Props) {
+  const { colors, isDark } = useTheme();
   const { language } = useI18n();
   const [currentPlan, setCurrentPlan] = useState('trial');
   const [isYearly, setIsYearly] = useState(false);
@@ -146,10 +148,10 @@ export default function PricingScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>{t('pricing.title')}</Text>
-        <Text style={styles.subtitle}>{t('pricing.subtitle')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('pricing.title')}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('pricing.subtitle')}</Text>
 
         {/* スロット満杯からの誘導メッセージ */}
         {fromSlotFull && (
@@ -164,17 +166,17 @@ export default function PricingScreen({ navigation, route }: Props) {
 
         {/* 月払い/年払い切り替えトグル */}
         <View style={styles.billingToggle}>
-          <Text style={[styles.billingText, !isYearly && styles.billingTextActive]}>
+          <Text style={[styles.billingText, { color: colors.textSecondary }, !isYearly && [styles.billingTextActive, { color: colors.text }]]}>
             {t('pricing.monthly')}
           </Text>
           <Switch
             value={isYearly}
             onValueChange={setIsYearly}
-            trackColor={{ false: '#E0E0E0', true: '#81C784' }}
-            thumbColor={isYearly ? '#4CAF50' : '#BDBDBD'}
+            trackColor={{ false: isDark ? '#444' : '#E0E0E0', true: '#81C784' }}
+            thumbColor={isYearly ? '#4CAF50' : (isDark ? '#888' : '#BDBDBD')}
           />
           <View style={styles.yearlyLabelContainer}>
-            <Text style={[styles.billingText, isYearly && styles.billingTextActive]}>
+            <Text style={[styles.billingText, { color: colors.textSecondary }, isYearly && [styles.billingTextActive, { color: colors.text }]]}>
               {t('pricing.yearly')}
             </Text>
             {isYearly && (
@@ -190,9 +192,9 @@ export default function PricingScreen({ navigation, route }: Props) {
             key={plan.id}
             style={[
               styles.planCard,
-              { borderColor: plan.color + '40' },
+              { borderColor: plan.color + '40', backgroundColor: colors.card },
               plan.isPopular && { borderColor: plan.color, borderWidth: 2 },
-              currentPlan === plan.id && styles.currentPlanCard,
+              currentPlan === plan.id && [styles.currentPlanCard, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }],
             ]}
             onPress={() => handleSelectPlan(plan.id)}
             activeOpacity={0.8}
@@ -220,14 +222,14 @@ export default function PricingScreen({ navigation, route }: Props) {
               <View style={styles.priceContainer}>
                 {plan.isTrial ? (
                   <View>
-                    <Text style={styles.priceText}>¥0</Text>
+                    <Text style={[styles.priceText, { color: colors.text }]}>¥0</Text>
                     <Text style={styles.trialPeriod}>{t('pricing.trialPeriod')}</Text>
                   </View>
                 ) : isYearly ? (
                   <View style={styles.yearlyPriceWrapper}>
                     <View style={styles.yearlyPriceRow}>
-                      <Text style={styles.priceText}>{formatPrice(plan.yearlyPrice)}</Text>
-                      <Text style={styles.priceUnit}>{t('pricing.perYear')}</Text>
+                      <Text style={[styles.priceText, { color: colors.text }]}>{formatPrice(plan.yearlyPrice)}</Text>
+                      <Text style={[styles.priceUnit, { color: colors.textSecondary }]}>{t('pricing.perYear')}</Text>
                     </View>
                     <Text style={styles.monthlyEquivalent}>
                       {t('pricing.monthlyEquivalent', { price: formatPrice(getMonthlyEquivalent(plan)) })}
@@ -235,8 +237,8 @@ export default function PricingScreen({ navigation, route }: Props) {
                   </View>
                 ) : (
                   <>
-                    <Text style={styles.priceText}>{formatPrice(plan.monthlyPrice)}</Text>
-                    <Text style={styles.priceUnit}>{t('pricing.perMonth')}</Text>
+                    <Text style={[styles.priceText, { color: colors.text }]}>{formatPrice(plan.monthlyPrice)}</Text>
+                    <Text style={[styles.priceUnit, { color: colors.textSecondary }]}>{t('pricing.perMonth')}</Text>
                   </>
                 )}
               </View>
@@ -259,7 +261,7 @@ export default function PricingScreen({ navigation, route }: Props) {
               {plan.featureKeys.map((featureKey, index) => (
                 <View key={index} style={styles.featureItem}>
                   <Text style={styles.featureCheck}>✅</Text>
-                  <Text style={styles.featureText}>{t(featureKey)}</Text>
+                  <Text style={[styles.featureText, { color: colors.textSecondary }]}>{t(featureKey)}</Text>
                 </View>
               ))}
             </View>
@@ -287,9 +289,9 @@ export default function PricingScreen({ navigation, route }: Props) {
         ))}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>{t('pricing.footer.secure')}</Text>
-          <Text style={styles.footerText}>{t('pricing.footer.cancelAnytime')}</Text>
-          <Text style={styles.footerText}>{t('pricing.footer.yearlyDiscount')}</Text>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('pricing.footer.secure')}</Text>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('pricing.footer.cancelAnytime')}</Text>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('pricing.footer.yearlyDiscount')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

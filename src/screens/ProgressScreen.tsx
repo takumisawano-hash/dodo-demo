@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import StatCard from '../components/StatCard';
 import SimpleChart from '../components/SimpleChart';
+import { useTheme } from '../theme';
 
 // Agent data matching HomeScreen
 const AGENTS = [
@@ -52,6 +53,7 @@ const BADGES = [
 type Period = 'week' | 'month';
 
 export default function ProgressScreen() {
+  const { colors, isDark } = useTheme();
   const [period, setPeriod] = useState<Period>('week');
 
   const getAgentById = (id: string) => AGENTS.find((a) => a.id === id);
@@ -62,21 +64,22 @@ export default function ProgressScreen() {
   const achievedBadges = BADGES.filter((b) => b.achieved).length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>📊 進捗レポート</Text>
-        <View style={styles.periodToggle}>
+        <Text style={[styles.title, { color: colors.text }]}>📊 進捗レポート</Text>
+        <View style={[styles.periodToggle, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
           <TouchableOpacity
             style={[
               styles.periodButton,
-              period === 'week' && styles.periodButtonActive,
+              period === 'week' && [styles.periodButtonActive, { backgroundColor: colors.card }],
             ]}
             onPress={() => setPeriod('week')}
           >
             <Text
               style={[
                 styles.periodText,
-                period === 'week' && styles.periodTextActive,
+                { color: colors.textSecondary },
+                period === 'week' && [styles.periodTextActive, { color: colors.text }],
               ]}
             >
               今週
@@ -85,14 +88,15 @@ export default function ProgressScreen() {
           <TouchableOpacity
             style={[
               styles.periodButton,
-              period === 'month' && styles.periodButtonActive,
+              period === 'month' && [styles.periodButtonActive, { backgroundColor: colors.card }],
             ]}
             onPress={() => setPeriod('month')}
           >
             <Text
               style={[
                 styles.periodText,
-                period === 'month' && styles.periodTextActive,
+                { color: colors.textSecondary },
+                period === 'month' && [styles.periodTextActive, { color: colors.text }],
               ]}
             >
               今月
@@ -107,7 +111,7 @@ export default function ProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Summary Stats */}
-        <Text style={styles.sectionTitle}>📈 サマリー</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 サマリー</Text>
         <View style={styles.statsGrid}>
           <StatCard
             title="セッション"
@@ -150,13 +154,13 @@ export default function ProgressScreen() {
         </View>
 
         {/* Weekly Activity Chart */}
-        <Text style={styles.sectionTitle}>📅 今週の活動</Text>
-        <View style={styles.chartCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>📅 今週の活動</Text>
+        <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={WEEKLY_DATA} color="#FF9800" height={100} />
         </View>
 
         {/* Agent Stats */}
-        <Text style={styles.sectionTitle}>🐦 エージェント別</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🐦 エージェント別</Text>
         {AGENT_STATS.map((stat) => {
           const agent = getAgentById(stat.id);
           if (!agent) return null;
@@ -186,26 +190,27 @@ export default function ProgressScreen() {
         })}
 
         {/* Goals Progress */}
-        <Text style={styles.sectionTitle}>🎯 目標達成率</Text>
-        <View style={styles.goalsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🎯 目標達成率</Text>
+        <View style={[styles.goalsCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={GOALS} color="#BA68C8" type="progress" />
         </View>
 
         {/* Badges */}
-        <Text style={styles.sectionTitle}>🏆 バッジコレクション</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>🏆 バッジコレクション</Text>
         <View style={styles.badgesGrid}>
           {BADGES.map((badge) => (
             <View
               key={badge.id}
               style={[
                 styles.badgeItem,
-                !badge.achieved && styles.badgeItemLocked,
+                { backgroundColor: colors.card },
+                !badge.achieved && [styles.badgeItemLocked, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }],
               ]}
             >
               <Text style={[styles.badgeEmoji, !badge.achieved && styles.badgeEmojiLocked]}>
                 {badge.emoji}
               </Text>
-              <Text style={[styles.badgeName, !badge.achieved && styles.badgeNameLocked]}>
+              <Text style={[styles.badgeName, { color: colors.text }, !badge.achieved && [styles.badgeNameLocked, { color: colors.textSecondary }]]}>
                 {badge.name}
               </Text>
               {!badge.achieved && (
@@ -216,9 +221,9 @@ export default function ProgressScreen() {
         </View>
 
         {/* Motivation */}
-        <View style={styles.motivationCard}>
+        <View style={[styles.motivationCard, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
           <Text style={styles.motivationEmoji}>💪</Text>
-          <Text style={styles.motivationText}>
+          <Text style={[styles.motivationText, { color: isDark ? '#81C784' : '#2E7D32' }]}>
             素晴らしい調子です！{'\n'}
             この調子で続けましょう！
           </Text>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { purchaseService, SubscriptionStatus } from '../services/purchases';
+import { useTheme } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -77,6 +78,7 @@ interface Props {
 }
 
 export default function AgentDetailScreen({ route, navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const { agent } = route.params;
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -191,7 +193,7 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
   const hasActiveSubscription = subscriptionStatus?.isActive || false;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -203,7 +205,7 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backText}>← 戻る</Text>
+            <Text style={[styles.backText, { color: colors.textSecondary }]}>← 戻る</Text>
           </TouchableOpacity>
 
           <Text style={styles.heroEmoji}>{agent.emoji}</Text>
@@ -227,8 +229,8 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
         {/* Description Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📝 紹介</Text>
-          <Text style={styles.descriptionText}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>📝 紹介</Text>
+          <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
             {agent.description}
             {'\n\n'}
             {agent.name}は、あなたの{agent.role}として、毎日の目標達成をサポートします。
@@ -239,18 +241,18 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
         {/* Features Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✨ 機能</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>✨ 機能</Text>
           <View style={styles.featuresGrid}>
             {AGENT_FEATURES.map((feature, index) => (
               <View 
                 key={index} 
-                style={[styles.featureCard, { borderColor: agent.color + '30' }]}
+                style={[styles.featureCard, { borderColor: agent.color + '30', backgroundColor: colors.card }]}
               >
                 <Text style={styles.featureIcon}>{feature.icon}</Text>
                 <Text style={[styles.featureTitle, { color: agent.color }]}>
                   {feature.title}
                 </Text>
-                <Text style={styles.featureDesc}>{feature.description}</Text>
+                <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{feature.description}</Text>
               </View>
             ))}
           </View>
@@ -259,28 +261,28 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
         {/* Reviews Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>💬 レビュー</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>💬 レビュー</Text>
             <View style={styles.overallRating}>
               <Text style={[styles.overallStars, { color: agent.color }]}>
                 {renderStars(rating)}
               </Text>
-              <Text style={styles.overallText}>{rating}</Text>
+              <Text style={[styles.overallText, { color: colors.text }]}>{rating}</Text>
             </View>
           </View>
 
           {displayedReviews.map((review) => (
-            <View key={review.id} style={styles.reviewCard}>
+            <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.card }]}>
               <View style={styles.reviewHeader}>
                 <Text style={styles.reviewAvatar}>{review.avatar}</Text>
                 <View style={styles.reviewMeta}>
-                  <Text style={styles.reviewUser}>{review.user}</Text>
-                  <Text style={styles.reviewDate}>{review.date}</Text>
+                  <Text style={[styles.reviewUser, { color: colors.text }]}>{review.user}</Text>
+                  <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>{review.date}</Text>
                 </View>
                 <Text style={[styles.reviewStars, { color: agent.color }]}>
                   {renderStars(review.rating)}
                 </Text>
               </View>
-              <Text style={styles.reviewContent}>{review.content}</Text>
+              <Text style={[styles.reviewContent, { color: colors.textSecondary }]}>{review.content}</Text>
             </View>
           ))}
 
@@ -298,46 +300,46 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
         {/* Pricing Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💎 プラン</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>💎 プラン</Text>
           
           {/* Free Trial Card */}
-          <View style={styles.pricingCard}>
+          <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
             <View style={styles.pricingHeader}>
-              <Text style={styles.pricingTitle}>無料トライアル</Text>
-              <Text style={styles.pricingBadge}>7日間</Text>
+              <Text style={[styles.pricingTitle, { color: colors.text }]}>無料トライアル</Text>
+              <Text style={[styles.pricingBadge, { backgroundColor: isDark ? '#333' : '#f0f0f0', color: colors.textSecondary }]}>7日間</Text>
             </View>
-            <Text style={styles.pricingPrice}>¥0</Text>
-            <Text style={styles.pricingDesc}>
+            <Text style={[styles.pricingPrice, { color: colors.text }]}>¥0</Text>
+            <Text style={[styles.pricingDesc, { color: colors.textSecondary }]}>
               すべての機能を7日間無料でお試しいただけます
             </Text>
-            <View style={styles.pricingFeatures}>
-              <Text style={styles.pricingFeature}>✓ 無制限チャット</Text>
-              <Text style={styles.pricingFeature}>✓ 進捗トラッキング</Text>
-              <Text style={styles.pricingFeature}>✓ パーソナライズ機能</Text>
+            <View style={[styles.pricingFeatures, { borderTopColor: isDark ? '#333' : '#f0f0f0' }]}>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 無制限チャット</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 進捗トラッキング</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ パーソナライズ機能</Text>
             </View>
           </View>
 
           {/* Premium Card */}
-          <View style={[styles.pricingCard, styles.pricingCardPremium, { borderColor: agent.color }]}>
+          <View style={[styles.pricingCard, styles.pricingCardPremium, { borderColor: agent.color, backgroundColor: colors.card }]}>
             <View style={[styles.premiumBadge, { backgroundColor: agent.color }]}>
               <Text style={styles.premiumBadgeText}>おすすめ</Text>
             </View>
             <View style={styles.pricingHeader}>
-              <Text style={styles.pricingTitle}>プレミアム</Text>
-              <Text style={styles.pricingBadge}>月額</Text>
+              <Text style={[styles.pricingTitle, { color: colors.text }]}>プレミアム</Text>
+              <Text style={[styles.pricingBadge, { backgroundColor: isDark ? '#333' : '#f0f0f0', color: colors.textSecondary }]}>月額</Text>
             </View>
             <Text style={[styles.pricingPrice, { color: agent.color }]}>
               ¥{price.toLocaleString()}
             </Text>
-            <Text style={styles.pricingDesc}>
+            <Text style={[styles.pricingDesc, { color: colors.textSecondary }]}>
               継続的なサポートで目標達成を加速
             </Text>
-            <View style={styles.pricingFeatures}>
-              <Text style={styles.pricingFeature}>✓ 無制限チャット</Text>
-              <Text style={styles.pricingFeature}>✓ 進捗トラッキング</Text>
-              <Text style={styles.pricingFeature}>✓ パーソナライズ機能</Text>
-              <Text style={styles.pricingFeature}>✓ 優先サポート</Text>
-              <Text style={styles.pricingFeature}>✓ 高度な分析機能</Text>
+            <View style={[styles.pricingFeatures, { borderTopColor: isDark ? '#333' : '#f0f0f0' }]}>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 無制限チャット</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 進捗トラッキング</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ パーソナライズ機能</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 優先サポート</Text>
+              <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 高度な分析機能</Text>
             </View>
           </View>
         </View>
@@ -347,7 +349,7 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* Fixed Bottom Buttons */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: isDark ? '#333' : '#f0f0f0' }]}>
         {hasActiveSubscription ? (
           // Already subscribed - just show chat button
           <TouchableOpacity 
@@ -360,14 +362,14 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
           // Not subscribed - show trial and subscribe buttons
           <>
             <TouchableOpacity 
-              style={[styles.tryButton, isTrialLoading && styles.buttonDisabled]}
+              style={[styles.tryButton, { backgroundColor: isDark ? '#333' : '#f0f0f0' }, isTrialLoading && styles.buttonDisabled]}
               onPress={handleStartTrial}
               disabled={isTrialLoading || isLoading}
             >
               {isTrialLoading ? (
-                <ActivityIndicator size="small" color="#333" />
+                <ActivityIndicator size="small" color={colors.text} />
               ) : (
-                <Text style={styles.tryButtonText}>無料で試す</Text>
+                <Text style={[styles.tryButtonText, { color: colors.text }]}>無料で試す</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity 

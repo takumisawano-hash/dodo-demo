@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
 import { AGENT_IMAGES } from '../data/agentImages';
+import { useTheme } from '../theme';
 
 // エージェントプロフィールデータ
 const AGENT_PROFILES: Record<string, {
@@ -223,25 +224,26 @@ interface Props {
 }
 
 export default function AgentProfileScreen({ route, navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const { agent, fromSlotSelection, slotIndex } = route.params;
   const profile = AGENT_PROFILES[agent.id];
   const isSubscribed = agent.isSubscribed || false;
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text>プロフィールが見つかりません</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.text }}>プロフィールが見つかりません</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* ヘッダー */}
-        <View style={[styles.header, { backgroundColor: agent.color + '20' }]}>
+        <View style={[styles.header, { backgroundColor: agent.color + (isDark ? '30' : '20') }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backText}>‹ 戻る</Text>
+            <Text style={[styles.backText, { color: colors.textSecondary }]}>‹ 戻る</Text>
           </TouchableOpacity>
           
           <View style={styles.avatarContainer}>
@@ -253,33 +255,33 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
           </View>
           
           <Text style={[styles.name, { color: agent.color }]}>{agent.name}</Text>
-          <Text style={styles.role}>{agent.role}</Text>
+          <Text style={[styles.role, { color: colors.textSecondary }]}>{agent.role}</Text>
         </View>
 
         {/* 挨拶 */}
-        <View style={styles.speechBubble}>
-          <Text style={styles.greeting}>{profile.greeting}</Text>
-          <Text style={styles.intro}>{profile.intro}</Text>
+        <View style={[styles.speechBubble, { backgroundColor: colors.card }]}>
+          <Text style={[styles.greeting, { color: colors.text }]}>{profile.greeting}</Text>
+          <Text style={[styles.intro, { color: colors.textSecondary }]}>{profile.intro}</Text>
         </View>
 
         {/* できること */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎯 こんなことができるよ！</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>🎯 こんなことができるよ！</Text>
           {profile.canHelp.map((item, index) => (
             <View key={index} style={styles.helpItem}>
-              <Text style={styles.helpText}>{item}</Text>
+              <Text style={[styles.helpText, { color: colors.textSecondary }]}>{item}</Text>
             </View>
           ))}
         </View>
 
         {/* 性格 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💭 僕のこと</Text>
-          <Text style={styles.personality}>{profile.personality}</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>💭 僕のこと</Text>
+          <Text style={[styles.personality, { color: colors.textSecondary }]}>{profile.personality}</Text>
         </View>
 
         {/* キャッチフレーズ */}
-        <View style={[styles.catchphraseContainer, { backgroundColor: agent.color + '15' }]}>
+        <View style={[styles.catchphraseContainer, { backgroundColor: agent.color + (isDark ? '25' : '15') }]}>
           <Text style={[styles.catchphrase, { color: agent.color }]}>{profile.catchphrase}</Text>
         </View>
 

@@ -21,6 +21,7 @@ import { t, useI18n, formatDate } from '../i18n';
 import SyncNotification from '../components/SyncNotification';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { sendChatMessage, sendChatMessageWithImage, ChatMessage as AIChatMessage } from '../services/ai';
+import { useTheme } from '../theme';
 
 // ----------------------------------------
 // Types
@@ -311,6 +312,7 @@ const generateWelcomeMessage = (agent: Agent): Message => {
 // メインコンポーネント
 // ----------------------------------------
 export default function ChatScreen({ route, navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const { agent } = route.params;
   const { language } = useI18n();
 
@@ -644,14 +646,14 @@ export default function ChatScreen({ route, navigation }: Props) {
           <View
             style={[
               styles.messageBubble,
-              isUser ? [styles.userBubble, { backgroundColor: agent.color }] : [styles.assistantBubble, { backgroundColor: '#F0F0F0' }],
+              isUser ? [styles.userBubble, { backgroundColor: agent.color }] : [styles.assistantBubble, { backgroundColor: isDark ? '#2A2A2A' : '#F0F0F0' }],
               isSelected && styles.selectedBubble,
             ]}
           >
             <Text
               style={[
                 styles.messageText,
-                isUser ? styles.userText : styles.assistantText,
+                isUser ? styles.userText : [styles.assistantText, { color: colors.text }],
               ]}
             >
               {item.content}
@@ -680,7 +682,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const agentName = t(`agents.${agent.id}.name`);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* ヘッダー */}
       <View style={[styles.header, { backgroundColor: agent.color }]}>
         <TouchableOpacity
@@ -732,7 +734,7 @@ export default function ChatScreen({ route, navigation }: Props) {
       />
 
       {/* メッセージリスト */}
-      <View style={styles.chatContainer}>
+      <View style={[styles.chatContainer, { backgroundColor: colors.background }]}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -772,7 +774,7 @@ export default function ChatScreen({ route, navigation }: Props) {
       >
         {/* 選択された画像のプレビュー */}
         {selectedImage && (
-          <View style={styles.imagePreviewContainer}>
+          <View style={[styles.imagePreviewContainer, { backgroundColor: isDark ? '#1A1A1A' : '#FAFAFA', borderTopColor: isDark ? '#333' : '#EEEEEE' }]}>
             <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
             <TouchableOpacity style={styles.removeImageButton} onPress={clearSelectedImage}>
               <Text style={styles.removeImageText}>✕</Text>
@@ -780,9 +782,9 @@ export default function ChatScreen({ route, navigation }: Props) {
           </View>
         )}
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: isDark ? '#1A1A1A' : '#FAFAFA', borderTopColor: isDark ? '#333' : '#EEEEEE' }]}>
           <TouchableOpacity
-            style={[styles.attachButton, { backgroundColor: selectedImage ? agent.color + '30' : undefined }]}
+            style={[styles.attachButton, { backgroundColor: selectedImage ? agent.color + '30' : (isDark ? '#333' : '#E8E8E8') }]}
             onPress={showImageOptions}
             disabled={isPickingImage}
           >
@@ -793,13 +795,13 @@ export default function ChatScreen({ route, navigation }: Props) {
             )}
           </TouchableOpacity>
 
-          <View style={styles.inputWrapper}>
+          <View style={[styles.inputWrapper, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0' }]}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { color: colors.text }]}
               value={inputText}
               onChangeText={setInputText}
               placeholder={selectedImage ? '画像について質問...' : t('chat.inputPlaceholder')}
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               multiline
               maxLength={2000}
               textAlignVertical="center"

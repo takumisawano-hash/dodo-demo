@@ -8,6 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../theme';
 
 // Mock user data
 const USER = {
@@ -36,14 +37,15 @@ interface Props {
 }
 
 export default function ProfileScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>プロフィール</Text>
+        <Text style={[styles.title, { color: colors.text }]}>プロフィール</Text>
       </View>
 
       <ScrollView
@@ -52,7 +54,7 @@ export default function ProfileScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Card */}
-        <View style={styles.profileCard}>
+        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
           <View style={styles.avatarContainer}>
             {USER.avatar ? (
               <Image source={{ uri: USER.avatar }} style={styles.avatar} />
@@ -66,35 +68,35 @@ export default function ProfileScreen({ navigation }: Props) {
             </TouchableOpacity>
           </View>
           
-          <Text style={styles.userName}>{USER.name}</Text>
-          <Text style={styles.userEmail}>{USER.email}</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>{USER.name}</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{USER.email}</Text>
           
-          <View style={styles.subscriptionBadge}>
+          <View style={[styles.subscriptionBadge, { backgroundColor: isDark ? '#3D2E00' : '#FFF3E0' }]}>
             <Text style={styles.subscriptionIcon}>✨</Text>
             <Text style={styles.subscriptionText}>{USER.subscription}プラン</Text>
           </View>
           
-          <Text style={styles.joinDate}>{USER.joinDate}から利用中</Text>
+          <Text style={[styles.joinDate, { color: colors.textSecondary }]}>{USER.joinDate}から利用中</Text>
         </View>
 
         {/* Stats Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>統計</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>統計</Text>
         </View>
         
         <View style={styles.statsContainer}>
           {STATS.map((stat, index) => (
-            <View key={index} style={styles.statCard}>
+            <View key={index} style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Text style={styles.statIcon}>{stat.icon}</Text>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Achievements Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>実績</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>実績</Text>
           <TouchableOpacity>
             <Text style={styles.seeAllText}>すべて見る →</Text>
           </TouchableOpacity>
@@ -106,7 +108,8 @@ export default function ProfileScreen({ navigation }: Props) {
               key={achievement.id}
               style={[
                 styles.achievementCard,
-                !achievement.unlocked && styles.achievementLocked,
+                { backgroundColor: colors.card },
+                !achievement.unlocked && [styles.achievementLocked, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }],
               ]}
             >
               <Text style={[
@@ -117,7 +120,8 @@ export default function ProfileScreen({ navigation }: Props) {
               </Text>
               <Text style={[
                 styles.achievementName,
-                !achievement.unlocked && styles.achievementNameLocked,
+                { color: colors.text },
+                !achievement.unlocked && [styles.achievementNameLocked, { color: colors.textSecondary }],
               ]}>
                 {achievement.name}
               </Text>
@@ -129,26 +133,26 @@ export default function ProfileScreen({ navigation }: Props) {
         </View>
 
         {/* Actions */}
-        <View style={styles.actionsContainer}>
+        <View style={[styles.actionsContainer, { backgroundColor: colors.card }]}>
           <TouchableOpacity 
-            style={styles.actionButton}
+            style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
             onPress={() => navigation.navigate('Settings')}
           >
             <Text style={styles.actionIcon}>⚙️</Text>
-            <Text style={styles.actionText}>設定</Text>
-            <Text style={styles.actionArrow}>→</Text>
+            <Text style={[styles.actionText, { color: colors.text }]}>設定</Text>
+            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
             <Text style={styles.actionIcon}>📊</Text>
-            <Text style={styles.actionText}>詳細な統計</Text>
-            <Text style={styles.actionArrow}>→</Text>
+            <Text style={[styles.actionText, { color: colors.text }]}>詳細な統計</Text>
+            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
             <Text style={styles.actionIcon}>🎁</Text>
-            <Text style={styles.actionText}>友達を招待</Text>
-            <Text style={styles.actionArrow}>→</Text>
+            <Text style={[styles.actionText, { color: colors.text }]}>友達を招待</Text>
+            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

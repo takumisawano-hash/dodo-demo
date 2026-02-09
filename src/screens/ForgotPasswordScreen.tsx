@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resetPassword } from '../services/supabase';
+import { useTheme } from '../theme';
 
 interface Props {
   navigation: any;
 }
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -87,7 +89,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
   if (isSubmitted) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.successContainer}>
           {/* Back Button */}
           <TouchableOpacity 
@@ -99,8 +101,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
           <View style={styles.successContent}>
             <Text style={styles.successEmoji}>📧</Text>
-            <Text style={styles.successTitle}>メールを送信しました</Text>
-            <Text style={styles.successMessage}>
+            <Text style={[styles.successTitle, { color: colors.text }]}>メールを送信しました</Text>
+            <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
               {email} に{'\n'}
               パスワードリセットのリンクを送信しました。{'\n'}
               メールをご確認ください。
@@ -131,7 +133,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -153,8 +155,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.logo}>🦤</Text>
-            <Text style={styles.title}>パスワードをリセット</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>パスワードをリセット</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               アカウントに登録されているメールアドレスを入力してください。{'\n'}
               パスワードリセットのリンクをお送りします。
             </Text>
@@ -164,11 +166,11 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <View style={styles.form}>
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>メールアドレス</Text>
+              <Text style={[styles.label, { color: colors.text }]}>メールアドレス</Text>
               <TextInput
-                style={[styles.input, error && styles.inputError]}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: isDark ? '#444' : '#E0E0E0', color: colors.text }, error && styles.inputError]}
                 placeholder="example@email.com"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -197,9 +199,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             {/* Info */}
-            <View style={styles.infoContainer}>
+            <View style={[styles.infoContainer, { backgroundColor: isDark ? '#3D2E00' : '#FFF3E0' }]}>
               <Text style={styles.infoEmoji}>💡</Text>
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoText, { color: isDark ? '#FFB74D' : '#E65100' }]}>
                 メールが届かない場合は、迷惑メールフォルダもご確認ください。
               </Text>
             </View>
@@ -207,7 +209,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>パスワードを思い出しましたか？</Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>パスワードを思い出しましたか？</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
               <Text style={styles.footerLink}>ログイン</Text>
             </TouchableOpacity>

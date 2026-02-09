@@ -8,6 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../theme';
 
 // Categories
 const CATEGORIES = [
@@ -126,6 +127,7 @@ interface Props {
 }
 
 export default function MarketScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortType>('popular');
   const [searchQuery, setSearchQuery] = useState('');
@@ -159,19 +161,19 @@ export default function MarketScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>🏪 マーケット</Text>
-        <Text style={styles.subtitle}>AIエージェントを探す</Text>
+        <Text style={[styles.logo, { color: colors.text }]}>🏪 マーケット</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>AIエージェントを探す</Text>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { backgroundColor: colors.card, color: colors.text }]}
           placeholder="エージェントを検索..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -190,13 +192,15 @@ export default function MarketScreen({ navigation }: Props) {
             key={cat.id}
             style={[
               styles.categoryChip,
-              selectedCategory === cat.id && styles.categoryChipActive,
+              { backgroundColor: colors.card },
+              selectedCategory === cat.id && [styles.categoryChipActive, { backgroundColor: isDark ? '#444' : '#333' }],
             ]}
             onPress={() => setSelectedCategory(cat.id)}
           >
             <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
             <Text style={[
               styles.categoryText,
+              { color: colors.textSecondary },
               selectedCategory === cat.id && styles.categoryTextActive,
             ]}>
               {cat.name}
@@ -207,18 +211,20 @@ export default function MarketScreen({ navigation }: Props) {
 
       {/* Sort Options */}
       <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>並び替え:</Text>
+        <Text style={[styles.sortLabel, { color: colors.textSecondary }]}>並び替え:</Text>
         {(['popular', 'rating', 'price'] as SortType[]).map(sort => (
           <TouchableOpacity
             key={sort}
             style={[
               styles.sortChip,
-              sortBy === sort && styles.sortChipActive,
+              { backgroundColor: isDark ? '#2A2A2A' : '#f0f0f0' },
+              sortBy === sort && [styles.sortChipActive, { backgroundColor: isDark ? '#444' : '#333' }],
             ]}
             onPress={() => setSortBy(sort)}
           >
             <Text style={[
               styles.sortText,
+              { color: colors.textSecondary },
               sortBy === sort && styles.sortTextActive,
             ]}>
               {sort === 'popular' ? '人気順' : sort === 'rating' ? '評価順' : '価格順'}
@@ -286,7 +292,7 @@ export default function MarketScreen({ navigation }: Props) {
         {filteredAgents.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyText}>該当するエージェントが見つかりません</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>該当するエージェントが見つかりません</Text>
           </View>
         )}
       </ScrollView>
