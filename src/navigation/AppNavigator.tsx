@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import OnboardingScreen from '../screens/OnboardingScreen';
 import TabNavigator from './TabNavigator';
+import ChatScreen from '../screens/ChatScreen';
 import { useSlots } from '../context/SlotsContext';
-// TODO: ChatScreen実装後にimport
-// import ChatScreen from '../screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,7 +22,9 @@ const AGENT_MAP: Record<string, { id: string; name: string; role: string; color:
 export default function AppNavigator() {
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [initialAgent, setInitialAgent] = useState<typeof AGENT_MAP[keyof typeof AGENT_MAP] | null>(null);
   const { addToSlot } = useSlots();
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -50,18 +51,31 @@ export default function AppNavigator() {
     
     // 選択されたエージェントをスロットに追加
     if (selectedAgentId && AGENT_MAP[selectedAgentId]) {
-      addToSlot(AGENT_MAP[selectedAgentId]);
+      const agent = AGENT_MAP[selectedAgentId];
+      addToSlot(agent);
+      setInitialAgent(agent); // 初回チャット用にエージェントを保存
     }
     
     setShowOnboarding(false);
   };
+
+  // オンボーディング完了後、エージェントが選択されていたらチャット画面に遷移
+  useEffect(() => {
+    if (!showOnboarding && initialAgent && navigationRef.current) {
+      // 少し遅延させてナビゲーションの準備を待つ
+      setTimeout(() => {
+        navigationRef.current?.navigate('Chat', { agent: initialAgent, isFirstChat: true });
+        setInitialAgent(null); // 使用後はクリア
+      }, 100);
+    }
+  }, [showOnboarding, initialAgent]);
 
   if (isLoading) {
     return null; // またはスプラッシュスクリーン
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {showOnboarding ? (
           <Stack.Screen name="Onboarding">
@@ -75,17 +89,13 @@ export default function AppNavigator() {
         ) : (
           <>
             <Stack.Screen name="Main" component={TabNavigator} />
-            {/* 
-            TODO: ChatScreen実装後に追加
             <Stack.Screen 
               name="Chat" 
               component={ChatScreen}
               options={{
-                headerShown: true,
-                headerBackTitle: '戻る',
+                headerShown: false,
               }}
-            /> 
-            */}
+            />
           </>
         )}
       </Stack.Navigator>

@@ -268,19 +268,22 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
         {/* できること */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <Ionicons name="flag" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Ionicons name="checkmark-circle" size={20} color={agent.color} style={{ marginRight: 6 }} />
             <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>こんなことができるよ！</Text>
           </View>
           {profile.canHelp.map((item, index) => (
-            <View key={index} style={styles.helpItem}>
-              <Text style={[styles.helpText, { color: colors.textSecondary }]}>{item}</Text>
+            <View key={index} style={[styles.helpItem, { backgroundColor: isDark ? agent.color + '15' : agent.color + '10', borderRadius: 12, padding: 12, marginBottom: 8 }]}>
+              <Text style={[styles.helpText, { color: colors.text }]}>{item}</Text>
             </View>
           ))}
         </View>
 
         {/* 性格 */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>💭 僕のこと</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="chatbubble-ellipses" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>僕のこと</Text>
+          </View>
           <Text style={[styles.personality, { color: colors.textSecondary }]}>{profile.personality}</Text>
         </View>
 
@@ -295,11 +298,12 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
             style={[styles.chatButton, { backgroundColor: agent.color }]}
             onPress={() => navigation.navigate('Chat', { agent })}
           >
-            <Text style={styles.chatButtonText}>💬 チャットを始める</Text>
+            <Ionicons name="chatbubbles" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.chatButtonText}>チャットを始める</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.chatButton, { backgroundColor: agent.color }]}
+            style={[styles.addButton, { backgroundColor: agent.color }]}
             onPress={() => {
               if (fromSlotSelection && slotIndex !== undefined) {
                 // スロット追加フローから来た場合は戻る
@@ -321,7 +325,13 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
               }
             }}
           >
-            <Text style={styles.chatButtonText}>➕ 追加する</Text>
+            <View style={styles.addButtonInner}>
+              <Ionicons name="add-circle" size={24} color="#fff" style={{ marginRight: 8 }} />
+              <View>
+                <Text style={styles.addButtonText}>マイコーチに追加</Text>
+                <Text style={styles.addButtonSubtext}>無料で始められます</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         )}
 
@@ -442,11 +452,39 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   chatButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  addButton: {
+    marginHorizontal: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  addButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  addButtonSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    marginTop: 2,
   },
   bottomPadding: {
     height: 40,

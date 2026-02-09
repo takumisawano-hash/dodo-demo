@@ -54,6 +54,13 @@ const AGENT_FEATURES = [
   { iconName: 'notifications', title: 'リマインダー', description: '習慣化をお手伝い' },
 ];
 
+// Similar coaches data
+const SIMILAR_COACHES = [
+  { id: 'fitness-coach', name: 'ゴリラ', role: '筋トレコーチ', emoji: '🦍', color: '#8B4513' },
+  { id: 'sleep-coach', name: 'コアラ', role: '睡眠コーチ', emoji: '🐨', color: '#607D8B' },
+  { id: 'mental-coach', name: 'スワン', role: 'メンタルコーチ', emoji: '🦢', color: '#E91E63' },
+];
+
 interface Agent {
   id: string;
   name: string;
@@ -229,14 +236,20 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
             </Text>
           </View>
 
-          <Text style={styles.heroSubscribers}>
-            👥 {subscribers.toLocaleString()}人が利用中
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="people" size={16} color="#888" style={{ marginRight: 6 }} />
+            <Text style={styles.heroSubscribers}>
+              {subscribers.toLocaleString()}人が利用中
+            </Text>
+          </View>
         </View>
 
         {/* Description Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>📝 紹介</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="document-text" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>紹介</Text>
+          </View>
           <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
             {agent.description}
             {'\n\n'}
@@ -271,7 +284,10 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
         {/* Reviews Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>💬 レビュー</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="chatbubbles" size={20} color={colors.text} style={{ marginRight: 6 }} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>レビュー</Text>
+            </View>
             <View style={styles.overallRating}>
               <Text style={[styles.overallStars, { color: agent.color }]}>
                 {renderStars(rating)}
@@ -310,7 +326,10 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
         {/* Pricing Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>💎 プラン</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="diamond" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>プラン</Text>
+          </View>
           
           {/* Free Trial Card */}
           <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
@@ -352,6 +371,27 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
               <Text style={[styles.pricingFeature, { color: colors.textSecondary }]}>✓ 高度な分析機能</Text>
             </View>
           </View>
+        </View>
+
+        {/* Similar Coaches */}
+        <View style={styles.section}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Ionicons name="people" size={20} color={colors.text} style={{ marginRight: 6 }} />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>類似コーチ</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.similarCoachesRow}>
+            {SIMILAR_COACHES.filter(c => c.id !== agent.id).map((coach) => (
+              <TouchableOpacity
+                key={coach.id}
+                style={[styles.similarCoachCard, { backgroundColor: colors.card }]}
+                onPress={() => navigation.push('AgentDetail', { agent: coach })}
+              >
+                <Text style={styles.similarCoachEmoji}>{coach.emoji}</Text>
+                <Text style={[styles.similarCoachName, { color: coach.color }]}>{coach.name}</Text>
+                <Text style={[styles.similarCoachRole, { color: colors.textSecondary }]}>{coach.role}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* Spacer for bottom buttons */}
@@ -703,5 +743,35 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  similarCoachesRow: {
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+  },
+  similarCoachCard: {
+    width: 110,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 14,
+    marginRight: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  similarCoachEmoji: {
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  similarCoachName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  similarCoachRole: {
+    fontSize: 11,
+    color: '#888',
   },
 });

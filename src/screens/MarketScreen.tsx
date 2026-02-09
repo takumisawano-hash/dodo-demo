@@ -40,6 +40,8 @@ const MARKET_AGENTS = [
     price: 980,
     isPopular: true,
     subscribers: 5600,
+    addedAt: new Date('2024-01-15'),
+    isNew: false,
   },
   {
     id: 'language-tutor',
@@ -56,6 +58,8 @@ const MARKET_AGENTS = [
     price: 1280,
     isPopular: true,
     subscribers: 8900,
+    addedAt: new Date('2024-02-01'),
+    isNew: false,
   },
   {
     id: 'habit-coach',
@@ -72,6 +76,8 @@ const MARKET_AGENTS = [
     price: 780,
     isPopular: false,
     subscribers: 3200,
+    addedAt: new Date('2024-12-01'),
+    isNew: true,
   },
   {
     id: 'finance-advisor',
@@ -88,6 +94,8 @@ const MARKET_AGENTS = [
     price: 1480,
     isPopular: true,
     subscribers: 2100,
+    addedAt: new Date('2024-11-15'),
+    isNew: true,
   },
   {
     id: 'meditation-guide',
@@ -104,6 +112,8 @@ const MARKET_AGENTS = [
     price: 880,
     isPopular: true,
     subscribers: 7400,
+    addedAt: new Date('2024-03-01'),
+    isNew: false,
   },
   {
     id: 'fitness-trainer',
@@ -120,10 +130,12 @@ const MARKET_AGENTS = [
     price: 1180,
     isPopular: false,
     subscribers: 2800,
+    addedAt: new Date('2024-10-20'),
+    isNew: true,
   },
 ];
 
-type SortType = 'popular' | 'rating' | 'price';
+type SortType = 'popular' | 'new' | 'rating' | 'price';
 
 interface Props {
   navigation: any;
@@ -146,6 +158,8 @@ export default function MarketScreen({ navigation }: Props) {
       switch (sortBy) {
         case 'popular':
           return b.subscribers - a.subscribers;
+        case 'new':
+          return b.addedAt.getTime() - a.addedAt.getTime();
         case 'rating':
           return b.rating - a.rating;
         case 'price':
@@ -220,7 +234,7 @@ export default function MarketScreen({ navigation }: Props) {
       {/* Sort Options */}
       <View style={styles.sortContainer}>
         <Text style={[styles.sortLabel, { color: colors.textSecondary }]}>並び替え:</Text>
-        {(['popular', 'rating', 'price'] as SortType[]).map(sort => (
+        {(['popular', 'new', 'rating', 'price'] as SortType[]).map(sort => (
           <TouchableOpacity
             key={sort}
             style={[
@@ -235,10 +249,17 @@ export default function MarketScreen({ navigation }: Props) {
               { color: colors.textSecondary },
               sortBy === sort && styles.sortTextActive,
             ]}>
-              {sort === 'popular' ? '人気順' : sort === 'rating' ? '評価順' : '価格順'}
+              {sort === 'popular' ? '人気順' : sort === 'new' ? '新着順' : sort === 'rating' ? '評価順' : '価格順'}
             </Text>
           </TouchableOpacity>
         ))}
+      </View>
+
+      {/* Results Count */}
+      <View style={styles.resultsCount}>
+        <Text style={[styles.resultsCountText, { color: colors.textSecondary }]}>
+          {filteredAgents.length}件のエージェント
+        </Text>
       </View>
 
       {/* Agent List */}
@@ -254,8 +275,12 @@ export default function MarketScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('AgentDetail', { agent })}
             activeOpacity={0.8}
           >
-            {/* Popular Badge */}
-            {agent.isPopular && (
+            {/* Popular / New Badge */}
+            {agent.isNew ? (
+              <View style={[styles.popularBadge, { backgroundColor: '#4CAF50' }]}>
+                <Text style={styles.popularText}>✨ 新着</Text>
+              </View>
+            ) : agent.isPopular && (
               <View style={styles.popularBadge}>
                 <Text style={styles.popularText}>🔥 人気</Text>
               </View>
@@ -422,6 +447,13 @@ const styles = StyleSheet.create({
   },
   sortTextActive: {
     color: '#fff',
+  },
+  resultsCount: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  resultsCountText: {
+    fontSize: 13,
   },
   scrollView: {
     flex: 1,

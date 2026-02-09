@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import NotificationItem, { 
   NotificationData, 
   NotificationType 
@@ -169,28 +170,29 @@ export default function NotificationsScreen({ navigation }: Props) {
     );
   }, [unreadCount]);
 
+  // Agent data for navigation
+  const AGENT_DATA: { [key: string]: { id: string; name: string; role: string; color: string; emoji: string } } = {
+    'ドードー': { id: 'diet-coach', name: 'ドードー', role: 'ダイエットコーチ', color: '#FF9800', emoji: '🦤' },
+    'オウル': { id: 'habit-coach', name: 'オウル', role: '習慣コーチ', color: '#BA68C8', emoji: '🦉' },
+    'ポリー': { id: 'language-tutor', name: 'ポリー', role: '語学コーチ', color: '#81C784', emoji: '🦜' },
+    'コアラ': { id: 'sleep-coach', name: 'コアラ', role: '睡眠コーチ', color: '#607D8B', emoji: '🐨' },
+    'スワン': { id: 'mental-coach', name: 'スワン', role: 'メンタルコーチ', color: '#E91E63', emoji: '🦢' },
+    'ゴリラ': { id: 'fitness-coach', name: 'ゴリラ', role: '筋トレコーチ', color: '#8B4513', emoji: '🦍' },
+  };
+
   const handleNotificationPress = useCallback((notification: NotificationData) => {
     // Navigate based on notification type
     switch (notification.type) {
       case 'agent_message':
         // Navigate to chat with agent
-        if (notification.agentName) {
-          // Map agent name to ID for navigation
-          const agentNameToId: { [key: string]: string } = {
-            'ドードー': 'diet-coach',
-            'オウル': 'habit-coach',
-            'ポリー': 'language-tutor',
-            'コアラ': 'sleep-coach',
-            'スワン': 'mental-coach',
-            'ゴリラ': 'fitness-coach',
-          };
-          const agentId = agentNameToId[notification.agentName] || 'diet-coach';
-          navigation.navigate('Chat', { agentId, agentName: notification.agentName });
+        if (notification.agentName && AGENT_DATA[notification.agentName]) {
+          const agent = AGENT_DATA[notification.agentName];
+          navigation.navigate('Chat', { agent });
         }
         break;
       case 'weekly_report':
         // Navigate to progress/stats
-        navigation.navigate('Progress');
+        navigation.navigate('ProgressTab');
         break;
       case 'special_offer':
         // Navigate to subscription
@@ -199,7 +201,7 @@ export default function NotificationsScreen({ navigation }: Props) {
       case 'goal_achieved':
       case 'streak':
         // Navigate to progress to see achievements
-        navigation.navigate('Progress');
+        navigation.navigate('ProgressTab');
         break;
       default:
         // Generic notification - just mark as read
@@ -266,9 +268,10 @@ export default function NotificationsScreen({ navigation }: Props) {
           style={[styles.backButton, { backgroundColor: colors.card }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.backIcon, { color: colors.text }]}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
+          <Ionicons name="notifications" size={22} color={colors.text} style={{ marginRight: 6 }} />
           <Text style={[styles.title, { color: colors.text }]}>通知</Text>
           {unreadCount > 0 && (
             <View style={styles.badge}>
@@ -284,13 +287,19 @@ export default function NotificationsScreen({ navigation }: Props) {
           onPress={handleMarkAllAsRead}
           disabled={unreadCount === 0}
         >
+          <Ionicons 
+            name="checkmark-done" 
+            size={18} 
+            color={unreadCount === 0 ? '#AAA' : '#FF9800'} 
+            style={{ marginRight: 4 }} 
+          />
           <Text
             style={[
               styles.markAllText,
               unreadCount === 0 && styles.markAllTextDisabled,
             ]}
           >
-            すべて既読
+            既読
           </Text>
         </TouchableOpacity>
       </View>
@@ -298,7 +307,9 @@ export default function NotificationsScreen({ navigation }: Props) {
       {/* Notification List */}
       {notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>🔔</Text>
+          <View style={[styles.emptyIconContainer, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]}>
+            <Ionicons name="notifications-off-outline" size={48} color={colors.textSecondary} />
+          </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>通知はありません</Text>
           <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
             新しい通知が届くとここに表示されます
@@ -325,7 +336,10 @@ export default function NotificationsScreen({ navigation }: Props) {
       {/* Swipe hint */}
       {notifications.length > 0 && (
         <View style={styles.hintContainer}>
-          <Text style={[styles.hintText, { color: colors.textSecondary, backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(250,250,250,0.9)' }]}>← 左にスワイプで削除</Text>
+          <View style={[styles.hintBadge, { backgroundColor: isDark ? 'rgba(30,30,30,0.95)' : 'rgba(250,250,250,0.95)' }]}>
+            <Ionicons name="arrow-back" size={12} color={colors.textSecondary} style={{ marginRight: 4 }} />
+            <Text style={[styles.hintText, { color: colors.textSecondary }]}>左にスワイプで削除</Text>
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -389,6 +403,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
@@ -425,10 +441,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
-  emptyIcon: {
-    fontSize: 64,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
-    opacity: 0.5,
   },
   emptyTitle: {
     fontSize: 18,
@@ -449,12 +468,19 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
+  hintBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   hintText: {
     fontSize: 12,
-    color: '#AAA',
-    backgroundColor: 'rgba(250, 250, 250, 0.9)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
   },
 });

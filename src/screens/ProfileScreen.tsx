@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,14 @@ import {
   Image,
   Alert,
   Share,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Mock user data
 const USER = {
@@ -20,23 +24,34 @@ const USER = {
   avatar: null, // Will use initials
   joinDate: '2024年12月',
   subscription: 'Pro',
+  totalDays: 45,
 };
 
 const STATS = [
-  { label: '会話数', value: '128', iconName: 'chatbubbles' },
-  { label: '連続日数', value: '14', iconName: 'flame' },
-  { label: '達成目標', value: '23', iconName: 'flag' },
+  { label: '会話数', value: '128', iconName: 'chatbubbles', color: '#667eea', trend: '+12' },
+  { label: '連続日数', value: '14', iconName: 'flame', color: '#FF6B6B', trend: '🔥' },
+  { label: '達成目標', value: '23', iconName: 'flag', color: '#4CAF50', trend: '+3' },
+];
+
+const WEEKLY_ACTIVITY = [
+  { day: '月', value: 80 },
+  { day: '火', value: 100 },
+  { day: '水', value: 60 },
+  { day: '木', value: 90 },
+  { day: '金', value: 70 },
+  { day: '土', value: 40 },
+  { day: '日', value: 85 },
 ];
 
 const ALL_ACHIEVEMENTS = [
-  { id: 1, name: '初チャット', icon: '🌟', unlocked: true, description: '初めてエージェントとチャット' },
-  { id: 2, name: '7日連続', icon: '📅', unlocked: true, description: '7日連続でアプリを使用' },
-  { id: 3, name: '習慣マスター', icon: '🏆', unlocked: false, description: '30日間の習慣を達成' },
-  { id: 4, name: '語学の達人', icon: '📚', unlocked: false, description: '100回のレッスン完了' },
-  { id: 5, name: '早起き鳥', icon: '🐦', unlocked: true, description: '朝6時前にチェックイン' },
-  { id: 6, name: '健康志向', icon: '🥗', unlocked: false, description: '食事を30日間記録' },
-  { id: 7, name: 'メンタルマスター', icon: '🧘', unlocked: false, description: '瞑想を100回完了' },
-  { id: 8, name: '友達100人', icon: '👥', unlocked: false, description: '10人の友達を招待' },
+  { id: 1, name: '初チャット', iconName: 'star', unlocked: true, description: '初めてエージェントとチャット', unlockedAt: '2024/12/01' },
+  { id: 2, name: '7日連続', iconName: 'calendar', unlocked: true, description: '7日連続でアプリを使用', unlockedAt: '2024/12/08' },
+  { id: 3, name: '習慣マスター', iconName: 'trophy', unlocked: false, description: '30日間の習慣を達成', progress: 14, total: 30 },
+  { id: 4, name: '語学の達人', iconName: 'book', unlocked: false, description: '100回のレッスン完了', progress: 45, total: 100 },
+  { id: 5, name: '早起き鳥', iconName: 'sunny', unlocked: true, description: '朝6時前にチェックイン', unlockedAt: '2024/12/15' },
+  { id: 6, name: '健康志向', iconName: 'nutrition', unlocked: false, description: '食事を30日間記録', progress: 8, total: 30 },
+  { id: 7, name: 'メンタルマスター', iconName: 'heart', unlocked: false, description: '瞑想を100回完了', progress: 22, total: 100 },
+  { id: 8, name: '友達100人', iconName: 'people', unlocked: false, description: '10人の友達を招待', progress: 2, total: 10 },
 ];
 
 interface Props {
@@ -46,29 +61,71 @@ interface Props {
 export default function ProfileScreen({ navigation }: Props) {
   const { colors, isDark } = useTheme();
   const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<typeof ALL_ACHIEVEMENTS[0] | null>(null);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
   };
 
+  const unlockedCount = ALL_ACHIEVEMENTS.filter(a => a.unlocked).length;
   const displayedAchievements = showAllAchievements 
     ? ALL_ACHIEVEMENTS 
     : ALL_ACHIEVEMENTS.slice(0, 4);
 
   const handleEditAvatar = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+    
     Alert.alert(
-      'プロフィール画像',
+      '📷 プロフィール画像',
       '画像を変更しますか？',
       [
         { text: 'キャンセル', style: 'cancel' },
-        { text: 'カメラで撮影', onPress: () => Alert.alert('カメラ', 'カメラ機能は今後実装予定です') },
-        { text: 'ライブラリから選択', onPress: () => Alert.alert('ライブラリ', 'ライブラリ機能は今後実装予定です') },
+        { text: '📸 カメラで撮影', onPress: () => Alert.alert('カメラ', 'カメラ機能は今後実装予定です') },
+        { text: '🖼️ ライブラリから選択', onPress: () => Alert.alert('ライブラリ', 'ライブラリ機能は今後実装予定です') },
+        { text: '🎨 絵文字を選択', onPress: () => Alert.alert('絵文字', '絵文字選択は今後実装予定です') },
       ]
     );
   };
 
   const handleViewAllAchievements = () => {
     setShowAllAchievements(!showAllAchievements);
+  };
+
+  const handleAchievementPress = (achievement: typeof ALL_ACHIEVEMENTS[0]) => {
+    setSelectedAchievement(achievement);
+    if (achievement.unlocked) {
+      Alert.alert(
+        `🏆 ${achievement.name}`,
+        `${achievement.description}\n\n達成日: ${achievement.unlockedAt}`,
+        [
+          { text: 'シェア', onPress: () => handleShareAchievement(achievement) },
+          { text: '閉じる' },
+        ]
+      );
+    } else {
+      const progressPercent = achievement.progress && achievement.total 
+        ? Math.round((achievement.progress / achievement.total) * 100) 
+        : 0;
+      Alert.alert(
+        `🔒 ${achievement.name}`,
+        `${achievement.description}\n\n進捗: ${achievement.progress}/${achievement.total} (${progressPercent}%)`,
+        [{ text: '閉じる' }]
+      );
+    }
+  };
+
+  const handleShareAchievement = async (achievement: typeof ALL_ACHIEVEMENTS[0]) => {
+    try {
+      await Share.share({
+        message: `🏆 DoDo Appで「${achievement.name}」を達成しました！\n${achievement.description}\n\n#DoDo #自己改善`,
+      });
+    } catch (error) {
+      console.error('Share error:', error);
+    }
   };
 
   const handleViewDetailedStats = () => {
@@ -82,10 +139,20 @@ export default function ProfileScreen({ navigation }: Props) {
         title: 'DoDo Appに招待',
       });
       if (result.action === Share.sharedAction) {
-        Alert.alert('招待完了', '友達を招待しました！🎉');
+        Alert.alert('🎉 招待完了', '友達を招待しました！');
       }
     } catch (error) {
       Alert.alert('エラー', '招待リンクの共有に失敗しました');
+    }
+  };
+
+  const handleShareProfile = async () => {
+    try {
+      await Share.share({
+        message: `🦤 ${USER.name}のDoDo プロフィール\n\n📊 会話数: 128\n🔥 連続記録: 14日\n🏆 実績: ${unlockedCount}/${ALL_ACHIEVEMENTS.length}\n\nDoDo Appで一緒に成長しよう！`,
+      });
+    } catch (error) {
+      console.error('Share error:', error);
     }
   };
 
@@ -93,6 +160,9 @@ export default function ProfileScreen({ navigation }: Props) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>プロフィール</Text>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShareProfile}>
+          <Ionicons name="share-outline" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -102,7 +172,7 @@ export default function ProfileScreen({ navigation }: Props) {
       >
         {/* Profile Card */}
         <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-          <View style={styles.avatarContainer}>
+          <Animated.View style={[styles.avatarContainer, { transform: [{ scale: scaleAnim }] }]}>
             {USER.avatar ? (
               <Image source={{ uri: USER.avatar }} style={styles.avatar} />
             ) : (
@@ -110,10 +180,10 @@ export default function ProfileScreen({ navigation }: Props) {
                 <Text style={styles.avatarText}>{getInitials(USER.name)}</Text>
               </View>
             )}
-            <TouchableOpacity style={styles.editAvatarButton} onPress={handleEditAvatar}>
-              <Text style={styles.editAvatarIcon}>📷</Text>
+            <TouchableOpacity style={[styles.editAvatarButton, { backgroundColor: colors.card }]} onPress={handleEditAvatar}>
+              <Ionicons name="camera" size={16} color={colors.text} />
             </TouchableOpacity>
-          </View>
+          </Animated.View>
           
           <Text style={[styles.userName, { color: colors.text }]}>{USER.name}</Text>
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{USER.email}</Text>
@@ -123,61 +193,131 @@ export default function ProfileScreen({ navigation }: Props) {
             <Text style={styles.subscriptionText}>{USER.subscription}プラン</Text>
           </View>
           
-          <Text style={[styles.joinDate, { color: colors.textSecondary }]}>{USER.joinDate}から利用中</Text>
+          <View style={styles.membershipInfo}>
+            <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+            <Text style={[styles.joinDate, { color: colors.textSecondary }]}> {USER.joinDate}から利用中</Text>
+            <Text style={[styles.totalDays, { color: colors.textSecondary }]}> • {USER.totalDays}日目</Text>
+          </View>
         </View>
 
-        {/* Stats Section */}
+        {/* Stats Section with Graph */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>統計</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 統計</Text>
+          <TouchableOpacity onPress={handleViewDetailedStats}>
+            <Text style={styles.seeAllText}>詳細 →</Text>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.statsContainer}>
           {STATS.map((stat, index) => (
-            <View key={index} style={[styles.statCard, { backgroundColor: colors.card }]}>
-              <Ionicons name={stat.iconName as any} size={24} color={colors.text} style={{ marginBottom: 8 }} />
+            <TouchableOpacity 
+              key={index} 
+              style={[styles.statCard, { backgroundColor: colors.card }]}
+              onPress={handleViewDetailedStats}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.statIconBg, { backgroundColor: stat.color + '20' }]}>
+                <Ionicons name={stat.iconName as any} size={22} color={stat.color} />
+              </View>
               <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
-            </View>
+              <View style={[styles.statTrend, { backgroundColor: stat.color + '15' }]}>
+                <Text style={[styles.statTrendText, { color: stat.color }]}>{stat.trend}</Text>
+              </View>
+            </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Weekly Activity Graph */}
+        <View style={[styles.weeklyCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.weeklyTitle, { color: colors.text }]}>今週のアクティビティ</Text>
+          <View style={styles.weeklyGraph}>
+            {WEEKLY_ACTIVITY.map((item, index) => (
+              <View key={index} style={styles.barContainer}>
+                <View style={styles.barWrapper}>
+                  <View 
+                    style={[
+                      styles.bar, 
+                      { 
+                        height: `${item.value}%`, 
+                        backgroundColor: index === 6 ? '#667eea' : (isDark ? '#4A4A4A' : '#E0E0E0')
+                      }
+                    ]} 
+                  />
+                </View>
+                <Text style={[styles.barLabel, { color: colors.textSecondary }]}>{item.day}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Achievements Section */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>実績</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>🏆 実績</Text>
+            <View style={[styles.achievementCount, { backgroundColor: colors.primary + '20' }]}>
+              <Text style={[styles.achievementCountText, { color: colors.primary }]}>{unlockedCount}/{ALL_ACHIEVEMENTS.length}</Text>
+            </View>
+          </View>
           <TouchableOpacity onPress={handleViewAllAchievements}>
             <Text style={styles.seeAllText}>
-              {showAllAchievements ? '閉じる ↑' : 'すべて見る →'}
+              {showAllAchievements ? '閉じる ↑' : 'すべて →'}
             </Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.achievementsContainer}>
           {displayedAchievements.map((achievement) => (
-            <View
+            <TouchableOpacity
               key={achievement.id}
               style={[
                 styles.achievementCard,
                 { backgroundColor: colors.card },
                 !achievement.unlocked && [styles.achievementLocked, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }],
               ]}
+              onPress={() => handleAchievementPress(achievement)}
+              activeOpacity={0.7}
             >
-              <Text style={[
-                styles.achievementIcon,
-                !achievement.unlocked && styles.achievementIconLocked,
+              <View style={[
+                styles.achievementIconBg,
+                { backgroundColor: achievement.unlocked ? '#FFD700' + '30' : (isDark ? '#333' : '#E0E0E0') }
               ]}>
-                {achievement.icon}
-              </Text>
-              <Text style={[
-                styles.achievementName,
-                { color: colors.text },
-                !achievement.unlocked && [styles.achievementNameLocked, { color: colors.textSecondary }],
-              ]}>
-                {achievement.name}
-              </Text>
-              {!achievement.unlocked && (
-                <Text style={styles.lockedIcon}>🔒</Text>
+                <Ionicons 
+                  name={achievement.iconName as any} 
+                  size={20} 
+                  color={achievement.unlocked ? '#FFD700' : colors.textSecondary} 
+                />
+              </View>
+              <View style={styles.achievementContent}>
+                <Text style={[
+                  styles.achievementName,
+                  { color: colors.text },
+                  !achievement.unlocked && { color: colors.textSecondary },
+                ]}>
+                  {achievement.name}
+                </Text>
+                {!achievement.unlocked && achievement.progress !== undefined && (
+                  <View style={styles.progressContainer}>
+                    <View style={[styles.progressBar, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
+                      <View 
+                        style={[
+                          styles.progressFill, 
+                          { width: `${(achievement.progress / (achievement.total || 1)) * 100}%` }
+                        ]} 
+                      />
+                    </View>
+                    <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+                      {achievement.progress}/{achievement.total}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              {achievement.unlocked ? (
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              ) : (
+                <Ionicons name="lock-closed" size={16} color={colors.textSecondary} />
               )}
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -187,27 +327,36 @@ export default function ProfileScreen({ navigation }: Props) {
             style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
             onPress={() => navigation.navigate('Settings')}
           >
-            <Text style={styles.actionIcon}>⚙️</Text>
+            <View style={[styles.actionIconBg, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' }]}>
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
+            </View>
             <Text style={[styles.actionText, { color: colors.text }]}>設定</Text>
-            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
             onPress={handleViewDetailedStats}
           >
-            <Text style={styles.actionIcon}>📊</Text>
+            <View style={[styles.actionIconBg, { backgroundColor: isDark ? '#2A2A2A' : '#F5F5F5' }]}>
+              <Ionicons name="bar-chart-outline" size={20} color={colors.text} />
+            </View>
             <Text style={[styles.actionText, { color: colors.text }]}>詳細な統計</Text>
-            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.actionButton, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}
+            style={[styles.actionButton, { borderBottomWidth: 0 }]}
             onPress={handleInviteFriends}
           >
-            <Text style={styles.actionIcon}>🎁</Text>
-            <Text style={[styles.actionText, { color: colors.text }]}>友達を招待</Text>
-            <Text style={[styles.actionArrow, { color: colors.textSecondary }]}>→</Text>
+            <View style={[styles.actionIconBg, { backgroundColor: '#FFF3E0' }]}>
+              <Ionicons name="gift-outline" size={20} color="#FF9800" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={[styles.actionText, { color: colors.text }]}>友達を招待</Text>
+              <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>招待で1ヶ月無料!</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -218,9 +367,11 @@ export default function ProfileScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 16,
@@ -228,7 +379,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+  },
+  shareButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
@@ -237,17 +394,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
+  
   // Profile Card
   profileCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 4,
     marginBottom: 24,
   },
   avatarContainer: {
@@ -263,9 +420,11 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
   },
   avatarText: {
     fontSize: 40,
@@ -276,54 +435,51 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  editAvatarIcon: {
-    fontSize: 16,
+    shadowRadius: 4,
+    elevation: 3,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
   },
   userEmail: {
     fontSize: 14,
-    color: '#888',
     marginTop: 4,
   },
   subscriptionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF3E0',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 16,
-  },
-  subscriptionIcon: {
-    fontSize: 14,
-    marginRight: 6,
   },
   subscriptionText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#FB8C00',
   },
-  joinDate: {
-    fontSize: 13,
-    color: '#AAA',
+  membershipInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 12,
   },
+  joinDate: {
+    fontSize: 13,
+  },
+  totalDays: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  
   // Section
   sectionHeader: {
     flexDirection: 'row',
@@ -331,94 +487,172 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
   },
   seeAllText: {
     fontSize: 14,
-    color: '#FF9800',
+    color: '#667eea',
+    fontWeight: '600',
   },
+  achievementCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  achievementCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  
   // Stats
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
     marginHorizontal: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 2,
   },
-  statIcon: {
-    fontSize: 24,
+  statIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
   },
   statLabel: {
     fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+    marginTop: 2,
   },
-  // Achievements
-  achievementsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 24,
-    marginHorizontal: -4,
+  statTrend: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 6,
   },
-  achievementCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
+  statTrendText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  
+  // Weekly Activity
+  weeklyCard: {
     borderRadius: 16,
     padding: 16,
-    margin: '1%',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  weeklyTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  weeklyGraph: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 100,
+  },
+  barContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  barWrapper: {
+    flex: 1,
+    width: '60%',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  bar: {
+    width: '100%',
+    borderRadius: 4,
+  },
+  barLabel: {
+    fontSize: 12,
+  },
+  
+  // Achievements
+  achievementsContainer: {
+    marginBottom: 24,
+    gap: 8,
+  },
+  achievementCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 14,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
   achievementLocked: {
-    backgroundColor: '#F5F5F5',
+    opacity: 0.8,
   },
-  achievementIcon: {
-    fontSize: 24,
+  achievementIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
-  achievementIconLocked: {
-    opacity: 0.4,
+  achievementContent: {
+    flex: 1,
   },
   achievementName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 8,
+  },
+  progressBar: {
     flex: 1,
-    fontSize: 14,
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#667eea',
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 11,
     fontWeight: '500',
-    color: '#333',
   },
-  achievementNameLocked: {
-    color: '#AAA',
-  },
-  lockedIcon: {
-    fontSize: 12,
-  },
+  
   // Actions
   actionsContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -431,21 +665,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
-  actionIcon: {
-    fontSize: 20,
-    marginRight: 16,
+  actionIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  actionTextContainer: {
+    flex: 1,
   },
   actionText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    fontWeight: '500',
   },
-  actionArrow: {
-    fontSize: 16,
-    color: '#CCC',
+  actionSubtext: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });

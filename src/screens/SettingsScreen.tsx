@@ -9,8 +9,10 @@ import {
   Alert,
   Linking,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { t, useI18n, formatDate } from '../i18n';
 import { useTheme, ThemeMode } from '../theme';
 import { ErrorToast, useErrorHandler } from '../components/ErrorDisplay';
@@ -29,6 +31,13 @@ export default function SettingsScreen({ navigation }: Props) {
   const [notifications, setNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Theme mode visual feedback
+  const themeModeIcons: Record<ThemeMode, string> = {
+    system: '⚙️',
+    light: '☀️',
+    dark: '🌙',
+  };
 
   // Mock user data
   const user = {
@@ -100,46 +109,86 @@ export default function SettingsScreen({ navigation }: Props) {
     );
   };
 
+  // 言語切り替えに確認ダイアログを追加
   const handleLanguageChange = () => {
     const buttons = availableLanguages.map(lang => ({
       text: lang.nativeLabel,
-      onPress: () => changeLanguage(lang.code),
+      onPress: () => {
+        if (lang.code !== language) {
+          // 言語変更の確認ダイアログ
+          Alert.alert(
+            '言語を変更',
+            `言語を「${lang.nativeLabel}」に変更しますか？\nアプリの表示言語が切り替わります。`,
+            [
+              { text: 'キャンセル', style: 'cancel' },
+              { 
+                text: '変更する', 
+                onPress: () => {
+                  changeLanguage(lang.code);
+                  setToastMessage(`言語を${lang.nativeLabel}に変更しました`);
+                }
+              },
+            ]
+          );
+        }
+      },
     }));
     buttons.push({ text: t('common.cancel'), onPress: () => {} });
 
     Alert.alert(
       t('settings.selectLanguage'),
-      undefined,
+      `現在の言語: ${currentLanguageLabel}`,
       buttons
     );
   };
 
+  // テーマモード切り替え（即時プレビュー付き）
   const handleThemeModeChange = () => {
     const themeModeLabels: Record<ThemeMode, string> = {
-      system: 'システム設定に従う',
-      light: 'ライトモード',
-      dark: 'ダークモード',
+      system: '⚙️ システム設定に従う',
+      light: '☀️ ライトモード',
+      dark: '🌙 ダークモード',
     };
 
-    const buttons: Array<{ text: string; onPress: () => void }> = [
-      { text: 'システム設定に従う', onPress: () => setThemeMode('system') },
-      { text: 'ライトモード', onPress: () => setThemeMode('light') },
-      { text: 'ダークモード', onPress: () => setThemeMode('dark') },
+    const currentLabel = themeModeLabels[themeMode];
+
+    const buttons: Array<{ text: string; onPress: () => void; style?: 'cancel' | 'default' | 'destructive' }> = [
+      { 
+        text: 'システム設定に従う', 
+        onPress: () => {
+          setThemeMode('system');
+          setToastMessage('外観をシステム設定に合わせました');
+        }
+      },
+      { 
+        text: 'ライトモード', 
+        onPress: () => {
+          setThemeMode('light');
+          setToastMessage('ライトモードに切り替えました');
+        }
+      },
+      { 
+        text: 'ダークモード', 
+        onPress: () => {
+          setThemeMode('dark');
+          setToastMessage('ダークモードに切り替えました');
+        }
+      },
     ];
-    buttons.push({ text: t('common.cancel'), onPress: () => {} });
+    buttons.push({ text: t('common.cancel'), onPress: () => {}, style: 'cancel' });
 
     Alert.alert(
-      '外観モード',
-      `現在: ${themeModeLabels[themeMode]}`,
+      '🎨 外観モード',
+      `現在: ${currentLabel}`,
       buttons
     );
   };
 
   const getThemeModeLabel = (): string => {
     switch (themeMode) {
-      case 'system': return 'システム';
-      case 'light': return 'ライト';
-      case 'dark': return 'ダーク';
+      case 'system': return '⚙️ システム';
+      case 'light': return '☀️ ライト';
+      case 'dark': return '🌙 ダーク';
       default: return 'システム';
     }
   };
@@ -152,6 +201,7 @@ export default function SettingsScreen({ navigation }: Props) {
     }
   };
 
+  // 設定行コンポーネント（改良版）
   const SettingRow = ({ 
     icon, 
     title, 
@@ -164,6 +214,7 @@ export default function SettingsScreen({ navigation }: Props) {
     onSwitchChange,
     textColor,
     disabled = false,
+    badge,
   }: {
     icon: string;
     title: string;
@@ -176,6 +227,7 @@ export default function SettingsScreen({ navigation }: Props) {
     onSwitchChange?: (value: boolean) => void;
     textColor?: string;
     disabled?: boolean;
+    badge?: string;
   }) => (
     <TouchableOpacity 
       style={[styles.settingRow, dynamicStyles.border, disabled && styles.settingRowDisabled]} 
@@ -183,15 +235,24 @@ export default function SettingsScreen({ navigation }: Props) {
       disabled={isSwitch || disabled}
       activeOpacity={isSwitch || disabled ? 1 : 0.7}
     >
-      <Text style={styles.settingIcon}>{icon}</Text>
+      <View style={[styles.settingIconContainer, { backgroundColor: colors.progressCardBackground }]}>
+        <Text style={styles.settingIcon}>{icon}</Text>
+      </View>
       <View style={styles.settingContent}>
-        <Text style={[
-          styles.settingTitle, 
-          { color: textColor || colors.text },
-          disabled && { color: colors.textTertiary }
-        ]}>
-          {title}
-        </Text>
+        <View style={styles.settingTitleRow}>
+          <Text style={[
+            styles.settingTitle, 
+            { color: textColor || colors.text },
+            disabled && { color: colors.textTertiary }
+          ]}>
+            {title}
+          </Text>
+          {badge && (
+            <View style={[styles.settingBadge, { backgroundColor: colors.primary }]}>
+              <Text style={styles.settingBadgeText}>{badge}</Text>
+            </View>
+          )}
+        </View>
         {subtitle && (
           <Text style={[styles.settingSubtitle, { color: disabled ? colors.textTertiary : colors.textSecondary }]}>
             {subtitle}
@@ -207,15 +268,20 @@ export default function SettingsScreen({ navigation }: Props) {
           disabled={disabled}
         />
       ) : value ? (
-        <Text style={[styles.settingValue, dynamicStyles.textSecondary]}>{value}</Text>
+        <View style={styles.settingValueContainer}>
+          <Text style={[styles.settingValue, dynamicStyles.textSecondary]}>{value}</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+        </View>
       ) : showArrow ? (
-        <Text style={[styles.settingArrow, { color: colors.textTertiary }]}>→</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
       ) : null}
     </TouchableOpacity>
   );
 
-  const SectionHeader = ({ title }: { title: string }) => (
+  // セクションヘッダー（改良版）
+  const SectionHeader = ({ title, icon }: { title: string; icon?: string }) => (
     <View style={styles.sectionHeader}>
+      {icon && <Text style={styles.sectionIcon}>{icon}</Text>}
       <Text style={[styles.sectionTitle, dynamicStyles.textSecondary]}>{title}</Text>
     </View>
   );
@@ -224,6 +290,7 @@ export default function SettingsScreen({ navigation }: Props) {
     <SafeAreaView style={[styles.container, dynamicStyles.container]}>
       <View style={styles.header}>
         <Text style={[styles.title, dynamicStyles.text]}>{t('settings.title')}</Text>
+        <Text style={[styles.headerSubtitle, dynamicStyles.textSecondary]}>アプリの設定をカスタマイズ</Text>
       </View>
 
       <ScrollView
@@ -232,21 +299,23 @@ export default function SettingsScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Account Info Section */}
-        <SectionHeader title={t('settings.accountInfo')} />
+        <SectionHeader title={t('settings.accountInfo')} icon="👤" />
         <View style={[styles.settingsCard, dynamicStyles.card]}>
           {/* Profile */}
           <TouchableOpacity 
             style={[styles.profileRow, dynamicStyles.border]} 
             onPress={() => navigation.navigate('Profile')}
           >
-            <View style={[styles.profileAvatar, { backgroundColor: colors.progressCardBackground }]}>
+            <View style={[styles.profileAvatar, { backgroundColor: colors.primary + '20' }]}>
               <Text style={styles.profileAvatarText}>{user.avatar}</Text>
             </View>
             <View style={styles.profileInfo}>
               <Text style={[styles.profileName, dynamicStyles.text]}>{user.name}</Text>
               <Text style={[styles.profileEmail, dynamicStyles.textSecondary]}>{user.email}</Text>
             </View>
-            <Text style={[styles.settingArrow, { color: colors.textTertiary }]}>→</Text>
+            <View style={[styles.profileEditBadge, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="pencil" size={14} color={colors.primary} />
+            </View>
           </TouchableOpacity>
 
           {/* Current Plan */}
@@ -254,14 +323,13 @@ export default function SettingsScreen({ navigation }: Props) {
             style={styles.planRow}
             onPress={() => navigation.navigate('Pricing')}
           >
-            <Text style={styles.settingIcon}>👑</Text>
+            <View style={[styles.settingIconContainer, { backgroundColor: '#FFF3E0' }]}>
+              <Text style={styles.settingIcon}>👑</Text>
+            </View>
             <View style={styles.settingContent}>
               <Text style={[styles.settingTitle, dynamicStyles.text]}>{t('settings.currentPlan')}</Text>
               <Text style={[styles.settingSubtitle, dynamicStyles.textSecondary]}>
-                {t('settings.planExpiry', { 
-                  plan: subscription.plan, 
-                  date: formatDate(subscription.expiresAt) 
-                })}
+                {subscription.plan}プラン • {formatDate(subscription.expiresAt)}まで
               </Text>
             </View>
             <View style={[styles.planChangeBadge, { backgroundColor: colors.primary }]}>
@@ -270,8 +338,27 @@ export default function SettingsScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* App Settings Section */}
-        <SectionHeader title={t('settings.appSettings')} />
+        {/* Appearance Section */}
+        <SectionHeader title="外観・言語" icon="🎨" />
+        <View style={[styles.settingsCard, dynamicStyles.card]}>
+          <SettingRow
+            icon="🌐"
+            title={t('settings.language')}
+            subtitle="アプリの表示言語を変更"
+            value={currentLanguageLabel}
+            onPress={handleLanguageChange}
+          />
+          <SettingRow
+            icon={themeModeIcons[themeMode]}
+            title={t('settings.darkMode')}
+            subtitle="画面の明るさを調整"
+            value={getThemeModeLabel()}
+            onPress={handleThemeModeChange}
+          />
+        </View>
+
+        {/* Notifications Section */}
+        <SectionHeader title="通知" icon="🔔" />
         <View style={[styles.settingsCard, dynamicStyles.card]}>
           <SettingRow
             icon="🔔"
@@ -281,27 +368,11 @@ export default function SettingsScreen({ navigation }: Props) {
             switchValue={notifications}
             onSwitchChange={handleNotificationToggle}
           />
-          <SettingRow
-            icon="🌐"
-            title={t('settings.language')}
-            value={currentLanguageLabel}
-            onPress={handleLanguageChange}
-          />
-          <SettingRow
-            icon="🌙"
-            title={t('settings.darkMode')}
-            value={getThemeModeLabel()}
-            onPress={handleThemeModeChange}
-          />
-        </View>
-
-        {/* Notification Settings */}
-        {notifications && (
-          <>
-            <SectionHeader title="通知設定" />
-            <View style={[styles.settingsCard, dynamicStyles.card]}>
+          
+          {notifications && (
+            <>
               <SettingRow
-                icon="🎯"
+                icon="🚩"
                 title="コーチリマインダー"
                 subtitle="毎日の進捗確認リマインダー"
                 isSwitch
@@ -324,50 +395,92 @@ export default function SettingsScreen({ navigation }: Props) {
                 switchValue={true}
                 onSwitchChange={() => {}}
               />
-            </View>
-          </>
-        )}
+              <SettingRow
+                icon="⏰"
+                title="リマインダー設定"
+                subtitle="通知時間の詳細設定"
+                onPress={() => navigation.navigate('Reminders')}
+              />
+            </>
+          )}
+        </View>
+
+        {/* Privacy & Data Section */}
+        <SectionHeader title="プライバシー・データ" icon="🔒" />
+        <View style={[styles.settingsCard, dynamicStyles.card]}>
+          <SettingRow
+            icon="📊"
+            title="データのエクスポート"
+            subtitle="あなたのデータをダウンロード"
+            onPress={() => setToastMessage('データエクスポート機能は準備中です')}
+            badge="Pro"
+          />
+          <SettingRow
+            icon="🗑️"
+            title="会話履歴を削除"
+            subtitle="過去のチャット履歴を消去"
+            onPress={() => Alert.alert('確認', '本当に会話履歴を削除しますか？この操作は取り消せません。', [
+              { text: 'キャンセル', style: 'cancel' },
+              { text: '削除', style: 'destructive', onPress: () => setToastMessage('会話履歴を削除しました') }
+            ])}
+          />
+        </View>
 
         {/* Support Section */}
-        <SectionHeader title={t('settings.support')} />
+        <SectionHeader title={t('settings.support')} icon="❓" />
         <View style={[styles.settingsCard, dynamicStyles.card]}>
           <SettingRow
             icon="❓"
             title={t('settings.helpFaq')}
+            subtitle="よくある質問と回答"
             onPress={() => handleOpenLink('https://example.com/help')}
           />
           <SettingRow
             icon="📧"
             title={t('settings.contact')}
+            subtitle="お問い合わせ・フィードバック"
             onPress={() => handleOpenLink('mailto:support@example.com')}
           />
           <SettingRow
             icon="📋"
             title={t('settings.terms')}
+            subtitle="サービス利用規約"
             onPress={() => handleOpenLink('https://example.com/terms')}
           />
           <SettingRow
             icon="🔒"
             title={t('settings.privacy')}
+            subtitle="プライバシーポリシー"
             onPress={() => handleOpenLink('https://example.com/privacy')}
           />
         </View>
 
         {/* Other Section */}
-        <SectionHeader title={t('settings.other')} />
+        <SectionHeader title={t('settings.other')} icon="ℹ️" />
         <View style={[styles.settingsCard, dynamicStyles.card]}>
           <View style={[styles.settingRow, dynamicStyles.border]}>
-            <Text style={styles.settingIcon}>📱</Text>
+            <View style={[styles.settingIconContainer, { backgroundColor: colors.progressCardBackground }]}>
+              <Text style={styles.settingIcon}>📱</Text>
+            </View>
             <View style={styles.settingContent}>
               <Text style={[styles.settingTitle, dynamicStyles.text]}>{t('settings.appVersion')}</Text>
+              <Text style={[styles.settingSubtitle, dynamicStyles.textSecondary]}>最新バージョン</Text>
             </View>
-            <Text style={[styles.versionText, dynamicStyles.textSecondary]}>v{appVersion}</Text>
+            <View style={[styles.versionBadge, { backgroundColor: colors.success + '20' }]}>
+              <Text style={[styles.versionText, { color: colors.success }]}>v{appVersion}</Text>
+            </View>
           </View>
+          <SettingRow
+            icon="⭐"
+            title="アプリを評価"
+            subtitle="App Storeでレビューを書く"
+            onPress={() => setToastMessage('レビューページを開きます')}
+          />
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity 
-          style={[styles.logoutButton, dynamicStyles.card, loading && styles.buttonDisabled]} 
+          style={[styles.logoutButton, { backgroundColor: isDark ? '#3D1B1B' : '#FFEBEE' }, loading && styles.buttonDisabled]} 
           onPress={handleLogout}
           disabled={loading}
         >
@@ -375,7 +488,7 @@ export default function SettingsScreen({ navigation }: Props) {
             <ActivityIndicator color={colors.error} />
           ) : (
             <>
-              <Text style={styles.logoutIcon}>🚪</Text>
+              <Ionicons name="log-out-outline" size={22} color={colors.error} />
               <Text style={[styles.logoutText, { color: colors.error }]}>{t('settings.logout')}</Text>
             </>
           )}
@@ -383,7 +496,8 @@ export default function SettingsScreen({ navigation }: Props) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: colors.textTertiary }]}>{t('settings.copyright')}</Text>
+          <Text style={[styles.footerText, { color: colors.textTertiary }]}>🦤 DoDo App</Text>
+          <Text style={[styles.footerCopyright, { color: colors.textTertiary }]}>{t('settings.copyright')}</Text>
         </View>
       </ScrollView>
 
@@ -394,35 +508,132 @@ export default function SettingsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   title: { fontSize: 28, fontWeight: 'bold' },
+  headerSubtitle: { fontSize: 14, marginTop: 4 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
-  sectionHeader: { marginBottom: 8, marginTop: 16 },
+  
+  // Section Header
+  sectionHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 10, 
+    marginTop: 20 
+  },
+  sectionIcon: { fontSize: 16, marginRight: 8 },
   sectionTitle: { fontSize: 14, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  settingsCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1 },
+  
+  // Settings Card
+  settingsCard: { 
+    borderRadius: 16, 
+    overflow: 'hidden', 
+    marginBottom: 4, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.08, 
+    shadowRadius: 4, 
+    elevation: 2 
+  },
+  
+  // Setting Row
+  settingRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 14, 
+    paddingHorizontal: 16, 
+    borderBottomWidth: 1 
+  },
   settingRowDisabled: { opacity: 0.6 },
-  settingIcon: { fontSize: 20, marginRight: 14 },
+  settingIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  settingIcon: { fontSize: 18 },
   settingContent: { flex: 1 },
-  settingTitle: { fontSize: 16 },
+  settingTitleRow: { flexDirection: 'row', alignItems: 'center' },
+  settingTitle: { fontSize: 16, fontWeight: '500' },
+  settingBadge: { 
+    paddingHorizontal: 6, 
+    paddingVertical: 2, 
+    borderRadius: 4, 
+    marginLeft: 8 
+  },
+  settingBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFFFFF' },
   settingSubtitle: { fontSize: 13, marginTop: 2 },
-  settingValue: { fontSize: 14, marginRight: 8 },
-  settingArrow: { fontSize: 16 },
-  profileRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderBottomWidth: 1 },
-  profileAvatar: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  profileAvatarText: { fontSize: 24 },
+  settingValueContainer: { flexDirection: 'row', alignItems: 'center' },
+  settingValue: { fontSize: 14, marginRight: 4 },
+  
+  // Profile Row
+  profileRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 16, 
+    paddingHorizontal: 16, 
+    borderBottomWidth: 1 
+  },
+  profileAvatar: { 
+    width: 56, 
+    height: 56, 
+    borderRadius: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginRight: 14 
+  },
+  profileAvatarText: { fontSize: 28 },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: 17, fontWeight: '600' },
+  profileName: { fontSize: 18, fontWeight: '600' },
   profileEmail: { fontSize: 14, marginTop: 2 },
-  planRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
-  planChangeBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  profileEditBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Plan Row
+  planRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 14, 
+    paddingHorizontal: 16 
+  },
+  planChangeBadge: { 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8 
+  },
   planChangeText: { fontSize: 13, fontWeight: '600', color: '#FFFFFF' },
-  versionText: { fontSize: 14, fontWeight: '500' },
-  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 16, paddingVertical: 16, marginTop: 16, minHeight: 56, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  logoutIcon: { fontSize: 20, marginRight: 8 },
+  
+  // Version
+  versionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  versionText: { fontSize: 14, fontWeight: '600' },
+  
+  // Logout Button
+  logoutButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderRadius: 16, 
+    paddingVertical: 16, 
+    marginTop: 20, 
+    minHeight: 56,
+    gap: 8,
+  },
   logoutText: { fontSize: 16, fontWeight: '600' },
   buttonDisabled: { opacity: 0.7 },
+  
+  // Footer
   footer: { alignItems: 'center', paddingVertical: 24 },
-  footerText: { fontSize: 12 },
+  footerText: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
+  footerCopyright: { fontSize: 12 },
 });

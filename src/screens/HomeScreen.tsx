@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, useI18n } from '../i18n';
@@ -30,6 +31,70 @@ const DAILY_TIP_KEYS = [
   'home.tips.tip3',
   'home.tips.tip4',
 ];
+
+// 空スロット誘導カード（改善5）
+const AddCoachCard = ({ 
+  onPress, 
+  emptyCount,
+  colors,
+  isDark,
+}: { 
+  onPress: () => void; 
+  emptyCount: number;
+  colors: any;
+  isDark: boolean;
+}) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.03,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <Animated.View 
+        style={[
+          styles.addCoachCard,
+          { 
+            backgroundColor: isDark ? '#2A2A2A' : '#FFF8E1',
+            borderColor: '#FF9800',
+            transform: [{ scale: pulseAnim }],
+          }
+        ]}
+      >
+        <View style={styles.addCoachIcon}>
+          <Text style={styles.addCoachIconText}>✨</Text>
+        </View>
+        <View style={styles.addCoachTextContainer}>
+          <Text style={[styles.addCoachTitle, { color: colors.text }]}>
+            コーチを追加しよう！
+          </Text>
+          <Text style={[styles.addCoachDesc, { color: colors.textSecondary }]}>
+            あと{emptyCount}人のコーチを追加できます
+          </Text>
+        </View>
+        <View style={styles.addCoachButton}>
+          <Text style={styles.addCoachButtonText}>＋</Text>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 // 各コーチの次のアクション（モック - 将来的にはAPIから取得）
 const COACH_NEXT_ACTIONS: Record<string, string> = {
@@ -169,6 +234,27 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.logo, dynamicStyles.text]}>{t('home.logo')}</Text>
         </View>
 
+        {/* ストリーク表示カード（改善3: 強化版） */}
+        <View style={[styles.streakCard, { backgroundColor: colors.card }]}>
+          <View style={styles.streakMain}>
+            <View style={styles.streakFireContainer}>
+              <Text style={styles.streakFireEmoji}>🔥</Text>
+            </View>
+            <View style={styles.streakTextContainer}>
+              <Text style={[styles.streakNumber, dynamicStyles.text]}>14</Text>
+              <Text style={[styles.streakLabel, dynamicStyles.textSecondary]}>日連続！</Text>
+            </View>
+          </View>
+          <Text style={[styles.streakMessage, { color: colors.primary }]}>
+            すごい！この調子で頑張ろう 💪
+          </Text>
+          <View style={styles.streakBadges}>
+            <View style={[styles.streakBadge, { backgroundColor: '#FFF3E0' }]}>
+              <Text style={styles.streakBadgeText}>🏆 最長記録まであと3日</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={[styles.progressCard, dynamicStyles.progressCard]}>
           <Text style={[styles.progressTitle, dynamicStyles.textSecondary]}>{t('home.todayProgress')}</Text>
           <View style={styles.progressStats}>
@@ -177,8 +263,8 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={[styles.statLabel, dynamicStyles.textSecondary]}>{t('home.goalsAchieved')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, dynamicStyles.text]}>🔥 7</Text>
-              <Text style={[styles.statLabel, dynamicStyles.textSecondary]}>{t('home.consecutiveDays')}</Text>
+              <Text style={[styles.statValue, dynamicStyles.text]}>45%</Text>
+              <Text style={[styles.statLabel, dynamicStyles.textSecondary]}>達成率</Text>
             </View>
           </View>
           <View style={[styles.progressBar, { backgroundColor: colors.progressBackground }]}>
@@ -225,6 +311,16 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
           </TouchableOpacity>
         ))}
+
+        {/* 空スロット誘導カード（改善5） */}
+        {subscribedAgents.length < 3 && (
+          <AddCoachCard 
+            onPress={() => navigation.navigate('MySlots')}
+            emptyCount={3 - subscribedAgents.length}
+            colors={colors}
+            isDark={isDark}
+          />
+        )}
 
         <Text style={[styles.sectionTitle, dynamicStyles.text]}>{t('home.recommendedCoaches')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recommendedScroll}>
@@ -290,6 +386,61 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, paddingBottom: 16 },
   greeting: { fontSize: 18 },
   logo: { fontSize: 24, fontWeight: 'bold' },
+  // ストリークカードスタイル（改善3）
+  streakCard: { 
+    borderRadius: 20, 
+    padding: 20, 
+    marginBottom: 16,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  streakMain: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  streakFireContainer: {
+    marginRight: 8,
+  },
+  streakFireEmoji: { 
+    fontSize: 48,
+  },
+  streakTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  streakNumber: { 
+    fontSize: 56, 
+    fontWeight: 'bold',
+  },
+  streakLabel: { 
+    fontSize: 20, 
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  streakMessage: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  streakBadges: {
+    alignItems: 'center',
+  },
+  streakBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  streakBadgeText: {
+    fontSize: 13,
+    color: '#F57C00',
+    fontWeight: '500',
+  },
   progressCard: { borderRadius: 16, padding: 16, marginBottom: 12 },
   progressTitle: { fontSize: 14, marginBottom: 12 },
   progressStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
@@ -352,4 +503,51 @@ const styles = StyleSheet.create({
   agentNameSmall: { fontSize: 16, fontWeight: 'bold' },
   agentRoleSmall: { fontSize: 11 },
   arrow: { fontSize: 18 },
+  // 空スロット誘導カードスタイル（改善5）
+  addCoachCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+  },
+  addCoachIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  addCoachIconText: {
+    fontSize: 24,
+  },
+  addCoachTextContainer: {
+    flex: 1,
+  },
+  addCoachTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  addCoachDesc: {
+    fontSize: 13,
+  },
+  addCoachButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addCoachButtonText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: -2,
+  },
 });

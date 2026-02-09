@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   FlatList,
   Alert,
   Image,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +53,62 @@ const ADDITIONAL_SLOT_PRICE = 300;
 // 追加会話制限単価（50回あたり）
 const ADDITIONAL_MESSAGES_PRICE = 200;
 const ADDITIONAL_MESSAGES_AMOUNT = 50;
+
+// 空スロット用アニメーションボタン（改善5）
+const EmptySlotButton = ({ 
+  onPress, 
+  isDark, 
+  colors 
+}: { 
+  onPress: () => void; 
+  isDark: boolean; 
+  colors: any;
+}) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
+
+  return (
+    <TouchableOpacity 
+      style={styles.emptySlot}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Animated.View 
+        style={[
+          styles.addIconAnimated, 
+          { 
+            backgroundColor: '#FF9800',
+            transform: [{ scale: pulseAnim }],
+          }
+        ]}
+      >
+        <Text style={styles.addIconTextAnimated}>＋</Text>
+      </Animated.View>
+      <View style={styles.emptySlotTextContainer}>
+        <Text style={[styles.emptySlotTextBold, { color: colors.text }]}>コーチを追加</Text>
+        <Text style={[styles.emptySlotHint, { color: colors.textSecondary }]}>タップして選択 →</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default function MySlotsScreen({ navigation, route }: Props) {
   const { colors, isDark } = useTheme();
@@ -349,16 +406,11 @@ export default function MySlotsScreen({ navigation, route }: Props) {
                 </View>
               </View>
             ) : (
-              <TouchableOpacity 
-                style={styles.emptySlot}
+              <EmptySlotButton 
                 onPress={() => openSwapModal(index)}
-              >
-                <View style={[styles.addIcon, { backgroundColor: isDark ? '#333' : '#F5F5F5', borderColor: colors.border }]}>
-                  <Text style={[styles.addIconText, { color: colors.textTertiary }]}>＋</Text>
-                </View>
-                <Text style={[styles.emptySlotText, { color: colors.textSecondary }]}>コーチを追加</Text>
-                <Text style={[styles.emptySlotHint, { color: colors.textTertiary }]}>タップして選択</Text>
-              </TouchableOpacity>
+                isDark={isDark}
+                colors={colors}
+              />
             )}
           </View>
         ))}
@@ -817,15 +869,41 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#BDBDBD',
   },
+  // 空スロットアニメーション用スタイル（改善5）
+  addIconAnimated: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addIconTextAnimated: {
+    fontSize: 28,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  emptySlotTextContainer: {
+    flex: 1,
+  },
+  emptySlotTextBold: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   emptySlotText: {
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
   },
   emptySlotHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#999',
-    marginLeft: 8,
+    marginTop: 2,
   },
   // スロット追加ボタン
   addSlotButton: {

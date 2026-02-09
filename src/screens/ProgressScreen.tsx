@@ -120,7 +120,7 @@ export default function ProgressScreen() {
             title="セッション"
             value={totalSessions}
             subtitle={period === 'week' ? '今週' : '今月'}
-            icon="💬"
+            iconName="chatbubble"
             color="#FF9800"
             bgColor="#FFF3E0"
             trend="up"
@@ -130,7 +130,7 @@ export default function ProgressScreen() {
             title="メッセージ"
             value={totalMessages}
             subtitle="合計"
-            icon="✉️"
+            iconName="mail"
             color="#81C784"
             bgColor="#E8F5E9"
             trend="up"
@@ -141,7 +141,7 @@ export default function ProgressScreen() {
           <StatCard
             title="最長ストリーク"
             value={`${maxStreak}日`}
-            icon="🔥"
+            iconName="flame"
             color="#FF7043"
             bgColor="#FBE9E7"
             trend="neutral"
@@ -150,7 +150,7 @@ export default function ProgressScreen() {
           <StatCard
             title="バッジ獲得"
             value={`${achievedBadges}/${BADGES.length}`}
-            icon="🏅"
+            iconName="ribbon"
             color="#FFB300"
             bgColor="#FFF8E1"
           />
@@ -191,8 +191,9 @@ export default function ProgressScreen() {
                     </Text>
                   </View>
                 </View>
-                <View style={[styles.streakBadge, { backgroundColor: isDark ? '#3D2200' : '#FFF3E0' }]}>
-                  <Text style={[styles.streakText, { color: isDark ? '#FFB74D' : '#E65100' }]}>🔥 {stat.streak}</Text>
+                <View style={[styles.streakBadge, { backgroundColor: isDark ? '#3D2200' : '#FFF3E0', flexDirection: 'row', alignItems: 'center' }]}>
+                  <Ionicons name="flame" size={14} color={isDark ? '#FFB74D' : '#E65100'} style={{ marginRight: 4 }} />
+                  <Text style={[styles.streakText, { color: isDark ? '#FFB74D' : '#E65100' }]}>{stat.streak}</Text>
                 </View>
               </View>
             </View>
@@ -235,11 +236,44 @@ export default function ProgressScreen() {
 
         {/* Motivation */}
         <View style={[styles.motivationCard, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
-          <Ionicons name="fitness" size={40} color={isDark ? '#81C784' : '#2E7D32'} style={{ marginRight: 16 }} />
-          <Text style={[styles.motivationText, { color: isDark ? '#81C784' : '#2E7D32' }]}>
-            素晴らしい調子です！{'\n'}
-            この調子で続けましょう！
-          </Text>
+          <View style={styles.motivationIconContainer}>
+            <Ionicons name="trophy" size={32} color={isDark ? '#81C784' : '#2E7D32'} />
+          </View>
+          <View style={styles.motivationContent}>
+            <Text style={[styles.motivationTitle, { color: isDark ? '#A5D6A7' : '#1B5E20' }]}>
+              素晴らしい調子です！ 🎉
+            </Text>
+            <Text style={[styles.motivationText, { color: isDark ? '#81C784' : '#2E7D32' }]}>
+              あと{7 - (maxStreak % 7)}日で次のマイルストーン達成！{'\n'}
+              この調子で続けましょう！
+            </Text>
+          </View>
+        </View>
+
+        {/* Weekly Summary */}
+        <View style={[styles.weeklySummaryCard, { backgroundColor: isDark ? '#2D1F3D' : '#F3E5F5' }]}>
+          <View style={styles.weeklySummaryHeader}>
+            <Ionicons name="calendar" size={20} color={isDark ? '#BA68C8' : '#7B1FA2'} style={{ marginRight: 8 }} />
+            <Text style={[styles.weeklySummaryTitle, { color: isDark ? '#CE93D8' : '#6A1B9A' }]}>
+              {period === 'week' ? '今週' : '今月'}のサマリー
+            </Text>
+          </View>
+          <View style={styles.weeklySummaryStats}>
+            <View style={styles.weeklySummaryStat}>
+              <Text style={[styles.weeklySummaryValue, { color: isDark ? '#CE93D8' : '#7B1FA2' }]}>{totalSessions}</Text>
+              <Text style={[styles.weeklySummaryLabel, { color: colors.textSecondary }]}>セッション</Text>
+            </View>
+            <View style={[styles.weeklySummaryDivider, { backgroundColor: isDark ? '#4A2D5C' : '#E1BEE7' }]} />
+            <View style={styles.weeklySummaryStat}>
+              <Text style={[styles.weeklySummaryValue, { color: isDark ? '#CE93D8' : '#7B1FA2' }]}>{maxStreak}日</Text>
+              <Text style={[styles.weeklySummaryLabel, { color: colors.textSecondary }]}>連続</Text>
+            </View>
+            <View style={[styles.weeklySummaryDivider, { backgroundColor: isDark ? '#4A2D5C' : '#E1BEE7' }]} />
+            <View style={styles.weeklySummaryStat}>
+              <Text style={[styles.weeklySummaryValue, { color: isDark ? '#CE93D8' : '#7B1FA2' }]}>85%</Text>
+              <Text style={[styles.weeklySummaryLabel, { color: colors.textSecondary }]}>目標達成</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -437,18 +471,68 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
-    alignItems: 'center',
     flexDirection: 'row',
+    alignItems: 'center',
   },
-  motivationEmoji: {
-    fontSize: 40,
+  motivationIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(129, 199, 132, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
-  motivationText: {
-    fontSize: 16,
-    color: '#2E7D32',
-    fontWeight: '600',
-    lineHeight: 24,
+  motivationContent: {
     flex: 1,
+  },
+  motivationTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  motivationText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    lineHeight: 20,
+  },
+  weeklySummaryCard: {
+    backgroundColor: '#F3E5F5',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    marginBottom: 30,
+  },
+  weeklySummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  weeklySummaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  weeklySummaryStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  weeklySummaryStat: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  weeklySummaryValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  weeklySummaryLabel: {
+    fontSize: 12,
+    color: '#888',
+  },
+  weeklySummaryDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E1BEE7',
   },
 });

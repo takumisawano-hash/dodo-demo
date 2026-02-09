@@ -111,10 +111,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
   const handleAgentSelectAndComplete = (agentId: string) => {
     setSelectedAgent(agentId);
-    // 少し遅延を入れてから完了
+    // 選択確認アニメーションを見せてから完了
     setTimeout(() => {
       onComplete(agentId);
-    }, 300);
+    }, 600);
   };
 
   // ステップ1: ウェルカム画面
@@ -276,6 +276,11 @@ export default function OnboardingScreen({ onComplete }: Props) {
               {selectedAgent === agent.id && (
                 <View style={[styles.selectedBadge, { backgroundColor: agent.color }]}>
                   <Text style={styles.selectedBadgeText}>✓</Text>
+                </View>
+              )}
+              {selectedAgent === agent.id && (
+                <View style={styles.selectedOverlay}>
+                  <Text style={styles.selectedOverlayText}>選択中...</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -645,6 +650,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  selectedOverlay: {
+    position: 'absolute',
+    right: 80,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  selectedOverlayText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   
   // 共通

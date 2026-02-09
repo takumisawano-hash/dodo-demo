@@ -109,8 +109,8 @@ export default function PaywallScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <TouchableOpacity style={[styles.closeButton, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]} onPress={handleDismiss}>
-        <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
+      <TouchableOpacity style={[styles.closeButton, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]} onPress={handleDismiss}>
+        <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>あとで</Text>
       </TouchableOpacity>
 
       <View style={styles.content}>
@@ -127,9 +127,27 @@ export default function PaywallScreen({ navigation, route }: Props) {
           <FeatureItem emoji="📧" text="メールサポート" />
         </View>
 
+        {/* Price Comparison */}
+        <View style={[styles.priceComparison, { backgroundColor: isDark ? '#2A2A2A' : '#FFF8E1' }]}>
+          <View style={styles.priceOption}>
+            <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>月額プラン</Text>
+            <Text style={[styles.priceValue, { color: colors.text }]}>¥480/月</Text>
+          </View>
+          <View style={styles.priceDivider} />
+          <View style={styles.priceOption}>
+            <View style={styles.bestValueBadge}>
+              <Text style={styles.bestValueText}>お得！</Text>
+            </View>
+            <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>年額プラン</Text>
+            <Text style={[styles.priceValue, { color: colors.text }]}>¥3,800/年</Text>
+            <Text style={styles.savingsText}>2ヶ月分お得 💰</Text>
+          </View>
+        </View>
+
         {/* Trial Banner */}
         <View style={[styles.trialBanner, { backgroundColor: isDark ? '#1B3D1B' : '#E8F5E9' }]}>
           <Text style={[styles.trialText, { color: isDark ? '#81C784' : '#2E7D32' }]}>🎁 7日間無料トライアル実施中</Text>
+          <Text style={[styles.trialSubtext, { color: isDark ? '#A5D6A7' : '#388E3C' }]}>期間中いつでもキャンセル無料</Text>
         </View>
       </View>
 
@@ -192,18 +210,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 60,
     right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#666',
-    fontWeight: '600',
+    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -260,17 +278,66 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#444',
   },
+  priceComparison: {
+    flexDirection: 'row',
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+  },
+  priceOption: {
+    flex: 1,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  priceDivider: {
+    width: 1,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 12,
+  },
+  priceLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  priceValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  bestValueBadge: {
+    position: 'absolute',
+    top: -24,
+    backgroundColor: '#FF5722',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  bestValueText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  savingsText: {
+    fontSize: 11,
+    color: '#4CAF50',
+    marginTop: 4,
+    fontWeight: '500',
+  },
   trialBanner: {
-    marginTop: 24,
+    marginTop: 20,
     backgroundColor: '#E8F5E9',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
+    alignItems: 'center',
   },
   trialText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#2E7D32',
+  },
+  trialSubtext: {
+    fontSize: 12,
+    marginTop: 2,
   },
   footer: {
     paddingHorizontal: 20,

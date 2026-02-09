@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
   icon?: string;
+  iconName?: string;
   color: string;
   bgColor: string;
   trend?: 'up' | 'down' | 'neutral';
@@ -17,6 +19,7 @@ export default function StatCard({
   value,
   subtitle,
   icon,
+  iconName,
   color,
   bgColor,
   trend,
@@ -47,7 +50,11 @@ export default function StatCard({
   return (
     <View style={[styles.card, { backgroundColor: bgColor }]}>
       <View style={styles.header}>
-        {icon && <Text style={styles.icon}>{icon}</Text>}
+        {iconName ? (
+          <Ionicons name={iconName as any} size={18} color={color} style={{ marginRight: 6 }} />
+        ) : icon ? (
+          <Text style={styles.icon}>{icon}</Text>
+        ) : null}
         <Text style={styles.title}>{title}</Text>
       </View>
       <Text style={[styles.value, { color }]}>{value}</Text>

@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import SimpleChart from '../components/SimpleChart';
 import InsightCard, { Insight } from '../components/InsightCard';
 import { t, useI18n, formatNumber } from '../i18n';
@@ -140,6 +141,7 @@ export default function DashboardScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('week');
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -235,7 +237,7 @@ export default function DashboardScreen({ navigation }: Props) {
         </View>
         <View style={styles.summaryGrid}>
           <View style={[styles.summaryCard, { backgroundColor: colors.successLight }]}>
-            <Text style={styles.summaryEmoji}>🎯</Text>
+            <Ionicons name="flag" size={28} color={colors.success} style={{ marginBottom: 8 }} />
             <View style={styles.progressContainer}>
               <Text style={[styles.summaryValue, dynamicStyles.text]}>{SUMMARY.goalProgress}%</Text>
               <View style={[styles.miniProgressBar, { backgroundColor: isDark ? colors.success + '30' : '#C8E6C9' }]}>
@@ -259,8 +261,31 @@ export default function DashboardScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Weekly Activity Chart */}
-        <Text style={[styles.sectionTitle, dynamicStyles.text]}>{t('dashboard.weeklyActivity')}</Text>
+        {/* Activity Chart with Period Selector */}
+        <View style={styles.chartHeaderRow}>
+          <Text style={[styles.sectionTitle, dynamicStyles.text, { marginTop: 0 }]}>{t('dashboard.weeklyActivity')}</Text>
+          <View style={styles.periodSelector}>
+            {(['week', 'month', 'year'] as const).map((period) => (
+              <TouchableOpacity
+                key={period}
+                style={[
+                  styles.periodButton,
+                  { backgroundColor: isDark ? '#2A2A2A' : '#f0f0f0' },
+                  selectedPeriod === period && { backgroundColor: colors.primary },
+                ]}
+                onPress={() => setSelectedPeriod(period)}
+              >
+                <Text style={[
+                  styles.periodButtonText,
+                  { color: colors.textSecondary },
+                  selectedPeriod === period && { color: '#fff' },
+                ]}>
+                  {period === 'week' ? '週' : period === 'month' ? '月' : '年'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
         <View style={[styles.chartCard, dynamicStyles.card]}>
           <SimpleChart data={WEEKLY_DATA} color={colors.primary} height={100} />
         </View>
@@ -349,6 +374,10 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 12 },
+  chartHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 12 },
+  periodSelector: { flexDirection: 'row', gap: 6 },
+  periodButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  periodButtonText: { fontSize: 13, fontWeight: '500' },
   insightSection: { marginTop: 8 },
   summaryGrid: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   summaryCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 2 },

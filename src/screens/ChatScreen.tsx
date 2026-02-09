@@ -14,14 +14,19 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { t, useI18n, formatDate } from '../i18n';
 import SyncNotification from '../components/SyncNotification';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { sendChatMessage, sendChatMessageWithImage, ChatMessage as AIChatMessage } from '../services/ai';
 import { useTheme } from '../theme';
+import { getCoachById } from '../data/agentMapping';
+import { saveRequest } from '../services/requests';
+import COACH_PROMPTS from '../data/coachPrompts';
 
 // ----------------------------------------
 // Types
@@ -34,6 +39,8 @@ interface Message {
   isRead?: boolean;
   syncNotification?: SyncDestination[];
   isStreaming?: boolean;
+  recommendedCoachId?: string | null;
+  requestTopic?: string | null;
 }
 
 interface SyncDestination {
@@ -53,9 +60,12 @@ interface Agent {
 }
 
 interface Props {
-  route: { params: { agent: Agent } };
+  route: { params: { agent: Agent; isFirstChat?: boolean } };
   navigation: any;
 }
+
+// リマインダー促し用キー
+const REMINDER_PROMPT_KEY = '@dodo_reminder_prompt_shown';
 
 // ----------------------------------------
 // 入力検知パターン（自動同期用）
@@ -100,6 +110,28 @@ function detectInputType(message: string): string | null {
 }
 
 // ----------------------------------------
+// AI応答解析（専門外推薦/リクエストタグ抽出）
+// ----------------------------------------
+interface ParsedAIResponse {
+  text: string;
+  recommendedCoachId: string | null;
+  requestTopic: string | null;
+}
+
+function parseAIResponse(response: string): ParsedAIResponse {
+  const recommendMatch = response.match(/\[RECOMMEND:([^\]]+)\]/);
+  const requestMatch = response.match(/\[REQUEST:([^\]]+)\]/);
+  const cleanResponse = response
+    .replace(/\[RECOMMEND:[^\]]+\]/g, '')
+    .replace(/\[REQUEST:[^\]]+\]/g, '');
+  return {
+    text: cleanResponse.trim(),
+    recommendedCoachId: recommendMatch?.[1] || null,
+    requestTopic: requestMatch?.[1] || null,
+  };
+}
+
+// ----------------------------------------
 // エージェント別クイックアクション定義
 // ----------------------------------------
 interface QuickAction {
@@ -131,6 +163,108 @@ const AGENT_QUICK_ACTIONS: Record<string, QuickAction[]> = {
 
 const getQuickActions = (agentId: string): QuickAction[] => {
   return AGENT_QUICK_ACTIONS[agentId] || AGENT_QUICK_ACTIONS['default'];
+};
+
+// ----------------------------------------
+// 推薦カードコンポーネント
+// ----------------------------------------
+const RecommendCard = ({ 
+  coachId, 
+  onPress,
+  colors,
+}: { 
+  coachId: string; 
+  onPress: (agent: any) => void;
+  colors: any;
+}) => {
+  const coach = COACH_PROMPTS[coachId];
+  if (!coach) return null;
+
+  const recommendedAgent = {
+    id: coach.id,
+    name: coach.name,
+    emoji: coach.emoji,
+    color: '#6366F1', // デフォルトカラー
+  };
+
+  return (
+    <View style={[styles.recommendCard, { backgroundColor: colors.card, borderColor: '#6366F1' }]}>
+      <Text style={styles.recommendCardEmoji}>💡</Text>
+      <View style={styles.recommendCardContent}>
+        <Text style={[styles.recommendCardTitle, { color: colors.text }]}>
+          {coach.emoji} {coach.name}がお手伝いできるかも！
+        </Text>
+        <TouchableOpacity 
+          style={styles.recommendCardButton}
+          onPress={() => onPress(recommendedAgent)}
+        >
+          <Text style={styles.recommendCardButtonText}>詳しく見る →</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+// ----------------------------------------
+// リクエストカードコンポーネント
+// ----------------------------------------
+const RequestCard = ({ 
+  topic,
+  fromCoachId,
+  colors,
+}: { 
+  topic: string;
+  fromCoachId: string;
+  colors: any;
+}) => {
+  const [requested, setRequested] = React.useState(false);
+
+  const handleRequest = async () => {
+    const success = await saveRequest(topic, fromCoachId);
+    if (success) {
+      setRequested(true);
+      Alert.alert(
+        'リクエスト送信完了！',
+        `「${topic}」のコーチリクエストを受け付けました。今後のアップデートでお届けします！✨`,
+        [{ text: 'OK' }]
+      );
+    } else {
+      Alert.alert(
+        'すでにリクエスト済み',
+        `「${topic}」のリクエストは既に送信されています。`,
+        [{ text: 'OK' }]
+      );
+      setRequested(true);
+    }
+  };
+
+  if (requested) {
+    return (
+      <View style={[styles.requestCard, styles.requestCardDone, { backgroundColor: colors.card }]}>
+        <Text style={styles.requestCardEmoji}>✅</Text>
+        <Text style={[styles.requestCardDoneText, { color: colors.textSecondary }]}>
+          リクエストを送信しました！
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.requestCard, { backgroundColor: colors.card, borderColor: '#F59E0B' }]}>
+      <Text style={styles.requestCardEmoji}>💭</Text>
+      <View style={styles.requestCardContent}>
+        <Text style={[styles.requestCardTitle, { color: colors.text }]}>
+          「{topic}」のコーチがほしいですか？
+        </Text>
+        <TouchableOpacity 
+          style={styles.requestCardButton}
+          onPress={handleRequest}
+        >
+          <Text style={styles.requestCardButtonText}>リクエストを送る</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 // ----------------------------------------
@@ -285,9 +419,9 @@ const formatTime = (date: Date) => {
 };
 
 // ----------------------------------------
-// ウェルカムメッセージ生成
+// ウェルカムメッセージ生成（強化版）
 // ----------------------------------------
-const generateWelcomeMessage = (agent: Agent): Message => {
+const generateWelcomeMessage = (agent: Agent, isFirstChat: boolean = false): Message => {
   const hour = new Date().getHours();
   let greetingKey = 'greetings.afternoon';
   if (hour < 6) greetingKey = 'greetings.evening';
@@ -298,10 +432,23 @@ const generateWelcomeMessage = (agent: Agent): Message => {
   const agentDescription = t(`agents.${agent.id}.description`);
   const killerFeature = t(`agents.${agent.id}.killerFeature`);
 
-  let content = t('chat.welcomeGreeting', { greeting: t(greetingKey), emoji: agent.emoji }) + '\n\n';
-  content += t('chat.welcomeIntro', { name: agentName, description: agentDescription }) + '\n\n';
-  content += t('chat.welcomeFeature', { feature: killerFeature }) + '\n\n';
-  content += t('chat.welcomeFooter');
+  let content = '';
+
+  if (isFirstChat) {
+    // 初回チャット用：より親しみやすいメッセージ
+    content = `${t(greetingKey)}！${agent.emoji}\n\n`;
+    content += `はじめまして！私は${agentName}です。\n`;
+    content += `あなたの${agent.role || ''}を一緒にサポートしていくよ！\n\n`;
+    content += `✨ 私の得意なこと: ${killerFeature}\n\n`;
+    content += `何でも気軽に聞いてね！\n`;
+    content += `下のボタンから始めるか、自由にメッセージを送ってみて 👇`;
+  } else {
+    // 通常のウェルカムメッセージ
+    content = t('chat.welcomeGreeting', { greeting: t(greetingKey), emoji: agent.emoji }) + '\n\n';
+    content += t('chat.welcomeIntro', { name: agentName, description: agentDescription }) + '\n\n';
+    content += t('chat.welcomeFeature', { feature: killerFeature }) + '\n\n';
+    content += t('chat.welcomeFooter');
+  }
 
   return {
     id: 'welcome',
@@ -317,11 +464,11 @@ const generateWelcomeMessage = (agent: Agent): Message => {
 // ----------------------------------------
 export default function ChatScreen({ route, navigation }: Props) {
   const { colors, isDark } = useTheme();
-  const { agent } = route.params;
+  const { agent, isFirstChat = false } = route.params;
   const { language } = useI18n();
 
   const [messages, setMessages] = useState<Message[]>(() => [
-    generateWelcomeMessage(agent),
+    generateWelcomeMessage(agent, isFirstChat),
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -330,8 +477,40 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [isOnline] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPickingImage, setIsPickingImage] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [userMessageCount, setUserMessageCount] = useState(0);
 
   const flatListRef = useRef<FlatList>(null);
+
+  // リマインダー設定の促しチェック（改善4）
+  useEffect(() => {
+    const checkReminderPrompt = async () => {
+      // ユーザーが3メッセージ送った後にリマインダー促しを表示
+      if (userMessageCount === 3) {
+        try {
+          const shown = await AsyncStorage.getItem(REMINDER_PROMPT_KEY);
+          if (shown !== 'true') {
+            setShowReminderModal(true);
+          }
+        } catch (error) {
+          // AsyncStorage使用不可時はスキップ
+        }
+      }
+    };
+    checkReminderPrompt();
+  }, [userMessageCount]);
+
+  const handleReminderResponse = async (setReminder: boolean) => {
+    try {
+      await AsyncStorage.setItem(REMINDER_PROMPT_KEY, 'true');
+    } catch (error) {
+      // AsyncStorage使用不可時はスキップ
+    }
+    setShowReminderModal(false);
+    if (setReminder) {
+      navigation.navigate('Settings', { openReminders: true });
+    }
+  };
 
   const isFirstConversation = useMemo(
     () => messages.length === 1 && messages[0].id === 'welcome',
@@ -432,6 +611,7 @@ export default function ChatScreen({ route, navigation }: Props) {
 
       setMessages((prev) => [...prev, userMessage]);
       setInputText('');
+      setUserMessageCount((prev) => prev + 1); // ユーザーメッセージカウント増加
       const imageToSend = selectedImage;
       setSelectedImage(null);
       setIsLoading(true);
@@ -480,10 +660,18 @@ export default function ChatScreen({ route, navigation }: Props) {
                 onComplete: (fullText: string) => {
                   const inputType = detectInputType(messageText);
                   const syncNotification = inputType ? SYNC_DESTINATIONS[inputType] : undefined;
+                  const parsed = parseAIResponse(fullText);
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMessageId
-                        ? { ...m, content: fullText, isStreaming: false, syncNotification }
+                        ? { 
+                            ...m, 
+                            content: parsed.text, 
+                            isStreaming: false, 
+                            syncNotification,
+                            recommendedCoachId: parsed.recommendedCoachId,
+                            requestTopic: parsed.requestTopic,
+                          }
                         : m
                     )
                   );
@@ -532,11 +720,21 @@ export default function ChatScreen({ route, navigation }: Props) {
                 const inputType = detectInputType(messageText);
                 const syncNotification = inputType ? SYNC_DESTINATIONS[inputType] : undefined;
 
+                // 専門外推薦/リクエストタグを解析
+                const parsed = parseAIResponse(fullText);
+
                 // ストリーミング完了
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMessageId
-                      ? { ...m, content: fullText, isStreaming: false, syncNotification }
+                      ? { 
+                          ...m, 
+                          content: parsed.text, 
+                          isStreaming: false, 
+                          syncNotification,
+                          recommendedCoachId: parsed.recommendedCoachId,
+                          requestTopic: parsed.requestTopic,
+                        }
                       : m
                   )
                 );
@@ -677,6 +875,24 @@ export default function ChatScreen({ route, navigation }: Props) {
         {/* 同期通知カード */}
         {!isUser && item.syncNotification && item.syncNotification.length > 0 && (
           <SyncNotification syncedTo={item.syncNotification} />
+        )}
+
+        {/* 専門外推薦カード */}
+        {!isUser && item.recommendedCoachId && (
+          <RecommendCard 
+            coachId={item.recommendedCoachId} 
+            onPress={(recommendedAgent) => navigation.navigate('AgentProfile', { agent: recommendedAgent })}
+            colors={colors}
+          />
+        )}
+
+        {/* リクエストカード */}
+        {!isUser && item.requestTopic && (
+          <RequestCard 
+            topic={item.requestTopic}
+            fromCoachId={agent.id}
+            colors={colors}
+          />
         )}
       </View>
     );
@@ -838,6 +1054,45 @@ export default function ChatScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* リマインダー設定促しモーダル（改善4） */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showReminderModal}
+        onRequestClose={() => handleReminderResponse(false)}
+      >
+        <View style={styles.reminderModalOverlay}>
+          <View style={[styles.reminderModalContent, { backgroundColor: colors.card }]}>
+            <Text style={styles.reminderModalEmoji}>⏰</Text>
+            <Text style={[styles.reminderModalTitle, { color: colors.text }]}>
+              リマインダーを設定しよう！
+            </Text>
+            <Text style={[styles.reminderModalDesc, { color: colors.textSecondary }]}>
+              毎日決まった時間に{agent.emoji}{t(`agents.${agent.id}.name`)}から
+              リマインダーが届くよ！習慣化に効果的✨
+            </Text>
+            <View style={styles.reminderModalButtons}>
+              <TouchableOpacity
+                style={[styles.reminderModalButton, styles.reminderModalButtonSecondary]}
+                onPress={() => handleReminderResponse(false)}
+              >
+                <Text style={[styles.reminderModalButtonText, { color: colors.textSecondary }]}>
+                  あとで
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.reminderModalButton, { backgroundColor: agent.color }]}
+                onPress={() => handleReminderResponse(true)}
+              >
+                <Text style={[styles.reminderModalButtonText, { color: 'white' }]}>
+                  設定する
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1220,5 +1475,143 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+
+  // 推薦カードスタイル
+  recommendCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 44,
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  recommendCardEmoji: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  recommendCardContent: {
+    flex: 1,
+  },
+  recommendCardTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  recommendCardButton: {
+    alignSelf: 'flex-start',
+  },
+  recommendCardButtonText: {
+    color: '#6366F1',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  // リクエストカードスタイル
+  requestCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 44,
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  requestCardDone: {
+    borderLeftColor: '#10B981',
+  },
+  requestCardEmoji: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  requestCardContent: {
+    flex: 1,
+  },
+  requestCardTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  requestCardButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  requestCardButtonText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  requestCardDoneText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  // リマインダーモーダルスタイル（改善4）
+  reminderModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  reminderModalContent: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  reminderModalEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  reminderModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  reminderModalDesc: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  reminderModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  reminderModalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  reminderModalButtonSecondary: {
+    backgroundColor: '#F0F0F0',
+  },
+  reminderModalButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -4,6 +4,12 @@
 // ========================================
 
 import { getCoachSystemPrompt } from '../data/coachPrompts';
+import { 
+  checkMessageSecurity, 
+  checkResponseConsistency,
+  logSecurityEvent,
+  getSafeResponse 
+} from './security';
 
 // ----------------------------------------
 // Types
@@ -359,6 +365,39 @@ export async function sendChatMessage(
 ): Promise<AIResponse> {
   const { stream = false, callbacks } = options;
 
+  // ========================================
+  // セキュリティチェック（プロンプトインジェクション対策）
+  // ========================================
+  const securityCheck = checkMessageSecurity(userMessage);
+  
+  if (securityCheck.riskLevel === 'dangerous') {
+    // 危険な入力をログに記録
+    await logSecurityEvent({
+      type: 'dangerous_input',
+      coachId,
+      message: userMessage.substring(0, 200), // 最初の200文字のみ
+      details: securityCheck.matchedPattern,
+    });
+    
+    // 安全な応答を返す（AIに送信しない）
+    const safeResponse = getSafeResponse(coachId);
+    callbacks?.onComplete?.(safeResponse);
+    return {
+      content: safeResponse,
+      provider: 'mock',
+    };
+  }
+  
+  if (securityCheck.riskLevel === 'warning') {
+    // 警告レベルはログのみ記録、処理は続行
+    await logSecurityEvent({
+      type: 'warning_input',
+      coachId,
+      message: userMessage.substring(0, 200),
+      details: securityCheck.matchedPattern,
+    });
+  }
+
   // システムプロンプトを取得
   const systemPrompt = getCoachSystemPrompt(coachId);
 
@@ -369,15 +408,45 @@ export async function sendChatMessage(
     { role: 'user', content: userMessage },
   ];
 
+  let response: AIResponse;
+
   // OpenAI APIを試行
   if (config.openaiApiKey) {
     try {
-      return await callOpenAI(messages, stream, callbacks);
+      response = await callOpenAI(messages, stream, callbacks);
     } catch (error) {
       console.warn('OpenAI API failed, falling back to Anthropic:', error);
+      response = await tryAnthropicOrMock(coachId, userMessage, messages, stream, callbacks);
     }
+  } else {
+    response = await tryAnthropicOrMock(coachId, userMessage, messages, stream, callbacks);
   }
 
+  // ========================================
+  // 応答の一貫性チェック
+  // ========================================
+  const consistencyCheck = checkResponseConsistency(coachId, response.content);
+  if (!consistencyCheck.isConsistent) {
+    await logSecurityEvent({
+      type: 'inconsistent_response',
+      coachId,
+      message: response.content.substring(0, 200),
+      details: consistencyCheck.warning,
+    });
+    // 不一致でも応答は返すが、ログに記録
+  }
+
+  return response;
+}
+
+// ヘルパー関数：Anthropicまたはモックを試行
+async function tryAnthropicOrMock(
+  coachId: string,
+  userMessage: string,
+  messages: ChatMessage[],
+  stream: boolean,
+  callbacks?: StreamCallbacks
+): Promise<AIResponse> {
   // Anthropic APIにフォールバック
   if (config.anthropicApiKey) {
     try {

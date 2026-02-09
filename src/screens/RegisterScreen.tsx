@@ -249,6 +249,24 @@ export default function RegisterScreen({ navigation }: Props) {
                     <View style={[styles.strengthBar, /[a-z]/.test(password) && styles.strengthBarActive]} />
                     <View style={[styles.strengthBar, /\d/.test(password) && styles.strengthBarActive]} />
                   </View>
+                  <Text style={[
+                    styles.strengthLabel,
+                    { color: (() => {
+                      const score = [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /\d/.test(password)].filter(Boolean).length;
+                      if (score <= 1) return '#E57373';
+                      if (score === 2) return '#FFB74D';
+                      if (score === 3) return '#81C784';
+                      return '#4CAF50';
+                    })() }
+                  ]}>
+                    {(() => {
+                      const score = [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /\d/.test(password)].filter(Boolean).length;
+                      if (score <= 1) return '弱い 🔓';
+                      if (score === 2) return 'まあまあ 🔐';
+                      if (score === 3) return '良い 🔒';
+                      return '強い 💪';
+                    })()}
+                  </Text>
                 </View>
               )}
             </View>
@@ -442,10 +460,13 @@ const styles = StyleSheet.create({
   },
   strengthContainer: {
     marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   strengthBars: {
     flexDirection: 'row',
     gap: 4,
+    flex: 1,
   },
   strengthBar: {
     flex: 1,
@@ -455,6 +476,12 @@ const styles = StyleSheet.create({
   },
   strengthBarActive: {
     backgroundColor: '#81C784',
+  },
+  strengthLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 12,
+    minWidth: 70,
   },
   registerButton: {
     backgroundColor: '#FF9800',

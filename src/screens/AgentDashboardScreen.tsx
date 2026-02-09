@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -232,9 +232,12 @@ const getChartTitle = (agentId: string) => {
   }
 };
 
+type Period = 'week' | 'month';
+
 export default function AgentDashboardScreen({ navigation, route }: Props) {
   const { colors, isDark } = useTheme();
   const { agent } = route.params;
+  const [period, setPeriod] = useState<Period>('week');
   const data = getAgentData(agent.id);
   const chartTitle = getChartTitle(agent.id);
 
@@ -269,7 +272,42 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
           )}
           <Text style={[styles.agentName, { color: agent.color }]}>{agent.name}</Text>
         </View>
-        <View style={styles.placeholder} />
+        <View style={[styles.periodToggle, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              period === 'week' && [styles.periodButtonActive, { backgroundColor: colors.card }],
+            ]}
+            onPress={() => setPeriod('week')}
+          >
+            <Text
+              style={[
+                styles.periodText,
+                { color: colors.textSecondary },
+                period === 'week' && [styles.periodTextActive, { color: colors.text }],
+              ]}
+            >
+              週
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.periodButton,
+              period === 'month' && [styles.periodButtonActive, { backgroundColor: colors.card }],
+            ]}
+            onPress={() => setPeriod('month')}
+          >
+            <Text
+              style={[
+                styles.periodText,
+                { color: colors.textSecondary },
+                period === 'month' && [styles.periodTextActive, { color: colors.text }],
+              ]}
+            >
+              月
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -291,7 +329,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         </View>
 
         {/* Weekly Chart */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 {chartTitle}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+          <Ionicons name="stats-chart" size={18} color={colors.text} style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>{chartTitle}</Text>
+        </View>
         <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
           <SimpleChart data={chartData} color={agent.color} height={120} />
         </View>
@@ -315,7 +356,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for money (categories) */}
         {agent.id === 'money-coach' && 'categories' in data && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>📊 カテゴリ別支出</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+              <Ionicons name="stats-chart" size={18} color={colors.text} style={{ marginRight: 6 }} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>カテゴリ別支出</Text>
+            </View>
             <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof MONEY_DATA).categories}
@@ -329,7 +373,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for sleep (quality) */}
         {agent.id === 'sleep-coach' && 'quality' in data && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>🌙 睡眠の質</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+              <Ionicons name="moon" size={18} color={colors.text} style={{ marginRight: 6 }} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>睡眠の質</Text>
+            </View>
             <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof SLEEP_DATA).quality}
@@ -343,7 +390,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         {/* Extra chart for mental (mood summary) */}
         {agent.id === 'mental-coach' && 'moodSummary' in data && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>😊 週間ムードサマリー</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+              <Ionicons name="happy" size={18} color={colors.text} style={{ marginRight: 6 }} />
+              <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>週間ムードサマリー</Text>
+            </View>
             <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
               <SimpleChart
                 data={(data as typeof MENTAL_DATA).moodSummary}
@@ -355,7 +405,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         )}
 
         {/* Detail Metrics */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📈 詳細指標</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+          <Ionicons name="trending-up" size={18} color={colors.text} style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>詳細指標</Text>
+        </View>
         <View style={styles.detailsGrid}>
           {data.details.map((detail, index) => (
             <View
@@ -372,7 +425,10 @@ export default function AgentDashboardScreen({ navigation, route }: Props) {
         </View>
 
         {/* History */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>📋 最近の記録</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12 }}>
+          <Ionicons name="clipboard" size={18} color={colors.text} style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>最近の記録</Text>
+        </View>
         <View style={[styles.historyCard, { backgroundColor: colors.card }]}>
           <FlatList
             data={data.history}
@@ -436,8 +492,33 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 60,
+  periodToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#E0E0E0',
+    borderRadius: 16,
+    padding: 2,
+  },
+  periodButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  periodButtonActive: {
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  periodText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  periodTextActive: {
+    color: '#333',
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
