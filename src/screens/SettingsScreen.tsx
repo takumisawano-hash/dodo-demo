@@ -49,7 +49,10 @@ export default function SettingsScreen({ navigation }: Props) {
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('settings.logout'), style: 'destructive', onPress: () => {
-          console.log('Logging out...');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
         }},
       ]
     );
@@ -158,7 +161,7 @@ export default function SettingsScreen({ navigation }: Props) {
         <SectionHeader title={t('settings.accountInfo')} />
         <View style={styles.settingsCard}>
           {/* Profile */}
-          <TouchableOpacity style={styles.profileRow}>
+          <TouchableOpacity style={styles.profileRow} onPress={() => navigation.navigate('Profile')}>
             <View style={styles.profileAvatar}>
               <Text style={styles.profileAvatarText}>{user.avatar}</Text>
             </View>
@@ -397,7 +400,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   planChangeBadge: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF9800',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,

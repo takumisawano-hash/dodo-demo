@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF9800',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF9800',
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 12,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   saveButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#FF9800',
   },
   saveButtonText: {
     fontSize: 16,
