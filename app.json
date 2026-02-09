@@ -8,9 +8,9 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icons/icon-text-only.png",
       "resizeMode": "contain",
-      "backgroundColor": "#64B5F6"
+      "backgroundColor": "#FF9800"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#64B5F6"
+        "backgroundColor": "#FF9800"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.getdodo.app",

@@ -44,10 +44,10 @@ interface SlotsContextType {
 const SlotsContext = createContext<SlotsContextType | undefined>(undefined);
 
 export function SlotsProvider({ children }: { children: ReactNode }) {
-  // 初期状態: ドードーとポリーがスロットに入っている
+  // 初期状態: 空（オンボーディングで選択）
   const [assignedAgents, setAssignedAgents] = useState<(Agent | null)[]>([
-    { ...ALL_AGENTS[0], isSubscribed: true },  // ドードー
-    { ...ALL_AGENTS[1], isSubscribed: true },  // ポリー
+    null,  // 空きスロット
+    null,  // 空きスロット
     null,  // 空きスロット
   ]);
 

@@ -8,34 +8,33 @@ import {
   FlatList,
   Animated,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
+import { AGENT_IMAGES } from '../data/agentImages';
 
 const { width, height } = Dimensions.get('window');
 
-// 人気エージェント（ステップ4用）
+// 人気エージェント（実際の15体コーチから）
 const POPULAR_AGENTS = [
   {
-    id: 'fitness-coach',
-    emoji: '💪',
-    name: 'フィットネスコーチ',
-    description: '運動習慣をサポート',
-    color: '#FF6B6B',
+    id: 'diet-coach',
+    name: 'ドードー',
+    description: 'ダイエット・食事管理',
+    color: '#FF9800',
   },
   {
-    id: 'language-sensei',
-    emoji: '🗣️',
-    name: '語学マスター',
-    description: '毎日の学習を応援',
-    color: '#4ECDC4',
+    id: 'sleep-coach',
+    name: 'コアラ',
+    description: '睡眠改善',
+    color: '#90A4AE',
   },
   {
-    id: 'productivity-guru',
-    emoji: '📈',
-    name: '習慣コーチ',
-    description: '目標達成をサポート',
-    color: '#9B59B6',
+    id: 'mental-coach',
+    name: 'スワン',
+    description: 'メンタルケア',
+    color: '#F48FB1',
   },
 ];
 
@@ -122,17 +121,38 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const renderWelcome = (item: OnboardingSlide) => (
     <View style={[styles.slide, { backgroundColor: item.bgColor }]}>
       <View style={styles.content}>
-        {/* 複数のエージェント絵文字 */}
-        <View style={styles.agentEmojisContainer}>
-          <Text style={styles.agentEmoji}>🤖</Text>
-          <Text style={[styles.agentEmoji, styles.centerEmoji]}>🦤</Text>
-          <Text style={styles.agentEmoji}>🎯</Text>
+        {/* エージェントキャラクター画像 */}
+        <View style={styles.agentImagesContainer}>
+          <Image 
+            source={{ uri: AGENT_IMAGES['sleep-coach'] }} 
+            style={styles.agentImageSmall}
+          />
+          <Image 
+            source={{ uri: AGENT_IMAGES['diet-coach'] }} 
+            style={styles.agentImageCenter}
+          />
+          <Image 
+            source={{ uri: AGENT_IMAGES['mental-coach'] }} 
+            style={styles.agentImageSmall}
+          />
         </View>
-        <View style={styles.secondaryEmojis}>
-          <Text style={styles.smallEmoji}>💪</Text>
-          <Text style={styles.smallEmoji}>📚</Text>
-          <Text style={styles.smallEmoji}>🏃</Text>
-          <Text style={styles.smallEmoji}>✨</Text>
+        <View style={styles.secondaryImages}>
+          <Image 
+            source={{ uri: AGENT_IMAGES['fitness-coach'] }} 
+            style={styles.agentImageTiny}
+          />
+          <Image 
+            source={{ uri: AGENT_IMAGES['habit-coach'] }} 
+            style={styles.agentImageTiny}
+          />
+          <Image 
+            source={{ uri: AGENT_IMAGES['language-tutor'] }} 
+            style={styles.agentImageTiny}
+          />
+          <Image 
+            source={{ uri: AGENT_IMAGES['money-coach'] }} 
+            style={styles.agentImageTiny}
+          />
         </View>
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
         <Text style={styles.welcomeSubtitle}>{item.subtitle}</Text>
@@ -225,7 +245,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const renderSelectAgent = (item: OnboardingSlide) => (
     <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
-        <Text style={styles.selectEmoji}>🎯</Text>
+        <Image 
+          source={{ uri: AGENT_IMAGES['diet-coach'] }} 
+          style={styles.selectHeaderImage}
+        />
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
         <Text style={[styles.selectSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
         
@@ -243,7 +266,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
               activeOpacity={0.7}
             >
               <View style={[styles.agentAvatarContainer, { backgroundColor: agent.color + '20' }]}>
-                <Text style={styles.agentCardEmoji}>{agent.emoji}</Text>
+                <Image 
+                  source={{ uri: AGENT_IMAGES[agent.id] }} 
+                  style={styles.agentCardImage}
+                />
               </View>
               <Text style={[styles.agentName, { color: colors.text }]}>{agent.name}</Text>
               <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{agent.description}</Text>
@@ -403,26 +429,32 @@ const styles = StyleSheet.create({
   },
   
   // ステップ1: ウェルカム
-  agentEmojisContainer: {
+  agentImagesContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  agentEmoji: {
-    fontSize: 48,
+  agentImageSmall: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     marginHorizontal: 8,
   },
-  centerEmoji: {
-    fontSize: 72,
+  agentImageCenter: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
-  secondaryEmojis: {
+  secondaryImages: {
     flexDirection: 'row',
     marginBottom: 24,
   },
-  smallEmoji: {
-    fontSize: 28,
-    marginHorizontal: 8,
-    opacity: 0.8,
+  agentImageTiny: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginHorizontal: 6,
+    opacity: 0.85,
   },
   title: {
     fontSize: 26,
@@ -543,8 +575,10 @@ const styles = StyleSheet.create({
   },
   
   // ステップ4: エージェント選択
-  selectEmoji: {
-    fontSize: 56,
+  selectHeaderImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     marginBottom: 12,
   },
   selectSubtitle: {
@@ -582,8 +616,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  agentCardEmoji: {
-    fontSize: 28,
+  agentCardImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   agentName: {
     fontSize: 17,
