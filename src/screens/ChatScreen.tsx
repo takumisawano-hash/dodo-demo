@@ -531,7 +531,7 @@ export default function ChatScreen({ route, navigation }: Props) {
           <View
             style={[
               styles.messageBubble,
-              isUser ? styles.userBubble : [styles.assistantBubble, { backgroundColor: '#F0F0F0' }],
+              isUser ? [styles.userBubble, { backgroundColor: agent.color }] : [styles.assistantBubble, { backgroundColor: '#F0F0F0' }],
               isSelected && styles.selectedBubble,
             ]}
           >
