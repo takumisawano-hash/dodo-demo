@@ -44,10 +44,10 @@ function TabIcon({ emoji, focused }: TabIconProps) {
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
-      <HomeStack.Screen name="Chat" component={ChatScreen} />
-      <HomeStack.Screen name="AgentDetail" component={AgentDetailScreen} />
-      <HomeStack.Screen name="AgentProfile" component={AgentProfileScreen} />
+      <HomeStack.Screen name="HomeMain" component={HomeScreen as any} />
+      <HomeStack.Screen name="Chat" component={ChatScreen as any} />
+      <HomeStack.Screen name="AgentDetail" component={AgentDetailScreen as any} />
+      <HomeStack.Screen name="AgentProfile" component={AgentProfileScreen as any} />
     </HomeStack.Navigator>
   );
 }
@@ -58,19 +58,19 @@ function DashboardStackScreen() {
     <DashboardStack.Navigator>
       <DashboardStack.Screen 
         name="DashboardMain" 
-        component={DashboardScreen}
+        component={DashboardScreen as any}
         options={{ headerShown: false }}
       />
       <DashboardStack.Screen 
         name="AgentDashboard" 
-        component={AgentDashboardScreen}
-        options={({ route }) => ({ 
+        component={AgentDashboardScreen as any}
+        options={({ route }: any) => ({ 
           title: route.params?.agentName || '詳細' 
         })}
       />
       <DashboardStack.Screen 
         name="Chat" 
-        component={ChatScreen}
+        component={ChatScreen as any}
         options={{ headerShown: false }}
       />
     </DashboardStack.Navigator>
@@ -81,10 +81,10 @@ function DashboardStackScreen() {
 function MySlotsStackScreen() {
   return (
     <MySlotsStack.Navigator screenOptions={{ headerShown: false }}>
-      <MySlotsStack.Screen name="MySlotsMain" component={MySlotsScreen} />
-      <MySlotsStack.Screen name="Pricing" component={PricingScreen} />
-      <MySlotsStack.Screen name="Chat" component={ChatScreen} />
-      <MySlotsStack.Screen name="AgentProfile" component={AgentProfileScreen} />
+      <MySlotsStack.Screen name="MySlotsMain" component={MySlotsScreen as any} />
+      <MySlotsStack.Screen name="Pricing" component={PricingScreen as any} />
+      <MySlotsStack.Screen name="Chat" component={ChatScreen as any} />
+      <MySlotsStack.Screen name="AgentProfile" component={AgentProfileScreen as any} />
     </MySlotsStack.Navigator>
   );
 }
@@ -93,12 +93,12 @@ function MySlotsStackScreen() {
 function SettingsStackScreen() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
-      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
-      <SettingsStack.Screen name="Pricing" component={PricingScreen} />
-      <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
-      <SettingsStack.Screen name="Profile" component={ProfileScreen} />
-      <SettingsStack.Screen name="Notifications" component={NotificationsScreen} />
-      <SettingsStack.Screen name="Reminders" component={RemindersScreen} />
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen as any} />
+      <SettingsStack.Screen name="Pricing" component={PricingScreen as any} />
+      <SettingsStack.Screen name="Subscription" component={SubscriptionScreen as any} />
+      <SettingsStack.Screen name="Profile" component={ProfileScreen as any} />
+      <SettingsStack.Screen name="Notifications" component={NotificationsScreen as any} />
+      <SettingsStack.Screen name="Reminders" component={RemindersScreen as any} />
     </SettingsStack.Navigator>
   );
 }

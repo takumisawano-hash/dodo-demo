@@ -3,7 +3,7 @@
 // ========================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient, SupabaseClient, Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Session, User as SupabaseUser, AuthError, AuthChangeEvent } from '@supabase/supabase-js';
 
 // ----------------------------------------
 // Configuration
@@ -215,9 +215,9 @@ export async function updatePassword(newPassword: string): Promise<AuthResult> {
  * Subscribe to auth state changes
  */
 export function onAuthStateChange(
-  callback: (event: string, session: Session | null) => void
+  callback: (event: AuthChangeEvent, session: Session | null) => void
 ) {
-  return supabase.auth.onAuthStateChange((event, session) => {
+  return supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
     callback(event, session);
   });
 }

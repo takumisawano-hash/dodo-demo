@@ -144,11 +144,12 @@ export function formatCurrency(amount: number): string {
 export function formatDate(date: Date, style: 'short' | 'medium' | 'long' = 'medium'): string {
   const locale = getLocale(currentLanguage);
   
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsMap: Record<string, Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric' },
     medium: { year: 'numeric', month: 'short', day: 'numeric' },
     long: { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' },
-  }[style];
+  };
+  const options = optionsMap[style];
   
   return new Intl.DateTimeFormat(locale, options).format(date);
 }

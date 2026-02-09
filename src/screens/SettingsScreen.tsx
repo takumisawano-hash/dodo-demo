@@ -60,7 +60,7 @@ export default function SettingsScreen({ navigation }: Props) {
       text: lang.nativeLabel,
       onPress: () => changeLanguage(lang.code),
     }));
-    buttons.push({ text: t('common.cancel'), onPress: () => {}, style: 'cancel' as const });
+    buttons.push({ text: t('common.cancel'), onPress: () => {} });
 
     Alert.alert(
       t('settings.selectLanguage'),

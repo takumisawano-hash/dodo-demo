@@ -162,7 +162,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
           additionalSlots: prev.additionalSlots + 1,
         }));
         // スロット配列にnullを追加
-        setAssignedAgents(prev => [...prev, null]);
+        setAssignedAgents([...assignedAgents, null]);
         window.alert('スロットを追加しました！');
       }
     }
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   // アップグレードバナー
   upgradeBanner: {
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    // Note: linear-gradient not supported in RN, using solid color
     backgroundColor: '#7C4DFF',
     borderRadius: 16,
     padding: 16,
