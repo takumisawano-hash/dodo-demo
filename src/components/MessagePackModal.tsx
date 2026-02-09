@@ -239,11 +239,11 @@ const styles = StyleSheet.create({
   },
 
   primaryButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#007AFF',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
-    shadowColor: '#FF9800',
+    shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   userBubble: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#007AFF',
     borderBottomRightRadius: 6,
   },
   assistantBubble: {
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
   },
   streamingCursor: {
-    color: '#FF9800',
+    color: '#007AFF',
     opacity: 0.7,
   },
 

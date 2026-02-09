@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   planChangeBadge: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#667eea',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
