@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { purchaseService } from '../services/purchases';
 
 interface Props {
   navigation: any;
@@ -20,6 +22,8 @@ interface Props {
 }
 
 export default function PaywallScreen({ navigation, route }: Props) {
+  const [isLoading, setIsLoading] = useState(false);
+  
   const reason = route?.params?.reason || 'message_limit';
   const agentName = route?.params?.agentName;
   const featureName = route?.params?.featureName;
@@ -59,19 +63,39 @@ export default function PaywallScreen({ navigation, route }: Props) {
     navigation.navigate('Subscription');
   };
 
-  const handleStartTrial = () => {
+  const handleStartTrial = async () => {
     Alert.alert(
       '7日間無料トライアル',
       'Basicプランを7日間無料でお試しいただけます。\n期間中はいつでもキャンセル可能です。',
       [
         { text: 'キャンセル', style: 'cancel' },
-        { 
+        {
           text: '無料で試す',
-          onPress: () => {
-            Alert.alert('完了', 'トライアルが開始されました！', [
-              { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
-          }
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              // Initialize RevenueCat and start free trial (Basic plan)
+              await purchaseService.initialize();
+              const result = await purchaseService.startFreeTrial();
+              
+              if (result.success) {
+                Alert.alert(
+                  '🎉 トライアル開始',
+                  '7日間の無料トライアルが開始されました！\nすべての機能をお楽しみください。',
+                  [{ text: 'OK', onPress: () => navigation.goBack() }]
+                );
+              } else if (result.cancelled) {
+                // User cancelled, do nothing
+              } else {
+                Alert.alert('エラー', result.error || 'トライアル開始に失敗しました');
+              }
+            } catch (error) {
+              console.error('Trial error:', error);
+              Alert.alert('エラー', 'トライアル開始中にエラーが発生しました');
+            } finally {
+              setIsLoading(false);
+            }
+          },
         },
       ]
     );
@@ -110,18 +134,26 @@ export default function PaywallScreen({ navigation, route }: Props) {
       {/* Action Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
           onPress={handleStartTrial}
           activeOpacity={0.8}
+          disabled={isLoading}
         >
-          <Text style={styles.primaryButtonText}>7日間無料で試す</Text>
-          <Text style={styles.primaryButtonSubtext}>その後 ¥480/月</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={styles.primaryButtonText}>7日間無料で試す</Text>
+              <Text style={styles.primaryButtonSubtext}>その後 ¥480/月</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={handleUpgrade}
           activeOpacity={0.8}
+          disabled={isLoading}
         >
           <Text style={styles.secondaryButtonText}>すべてのプランを見る</Text>
         </TouchableOpacity>
@@ -130,6 +162,7 @@ export default function PaywallScreen({ navigation, route }: Props) {
           style={styles.dismissButton}
           onPress={handleDismiss}
           activeOpacity={0.8}
+          disabled={isLoading}
         >
           <Text style={styles.dismissButtonText}>今はスキップ</Text>
         </TouchableOpacity>
@@ -278,5 +311,8 @@ const styles = StyleSheet.create({
   dismissButtonText: {
     color: '#999',
     fontSize: 14,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

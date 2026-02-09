@@ -5,6 +5,16 @@
 // Base API
 export { api, tokenManager, ApiClientError, API_BASE_URL } from './api';
 
+// Purchases (RevenueCat)
+export {
+  purchaseService,
+  PRODUCT_IDS,
+  ENTITLEMENTS,
+  PLAN_TO_PRODUCT,
+  type SubscriptionStatus,
+  type PurchaseResult,
+} from './purchases';
+
 // Services
 export { authService } from './authService';
 export { chatService } from './chatService';

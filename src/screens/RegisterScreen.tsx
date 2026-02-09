@@ -8,8 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { signUp, signInWithOAuth, OAuthProvider } from '../services/supabase';
 
 interface Props {
   navigation: any;
@@ -30,6 +33,8 @@ export default function RegisterScreen({ navigation }: Props) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<OAuthProvider | null>(null);
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -64,17 +69,75 @@ export default function RegisterScreen({ navigation }: Props) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = () => {
-    if (validateForm()) {
-      // TODO: 実際の登録処理
-      console.log('Register:', { name, email, password });
-      navigation.replace('Home');
+  const handleRegister = async () => {
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await signUp({
+        email,
+        password,
+        username: name.trim().toLowerCase().replace(/\s+/g, '_'),
+        displayName: name.trim(),
+      });
+      
+      if (result.success) {
+        // Check if email confirmation is required
+        if (result.session) {
+          // User is immediately logged in
+          navigation.replace('Home');
+        } else {
+          // Email confirmation required
+          Alert.alert(
+            '登録完了',
+            '確認メールを送信しました。メールをご確認いただき、リンクをクリックして登録を完了してください。',
+            [
+              {
+                text: 'OK',
+                onPress: () => navigation.navigate('Login'),
+              },
+            ]
+          );
+        }
+      } else {
+        // Map common Supabase errors to Japanese
+        let errorMessage = result.error || '登録に失敗しました';
+        if (result.error?.includes('User already registered')) {
+          errorMessage = 'このメールアドレスは既に登録されています';
+        } else if (result.error?.includes('Password should be at least')) {
+          errorMessage = 'パスワードは8文字以上で入力してください';
+        } else if (result.error?.includes('Unable to validate email')) {
+          errorMessage = '有効なメールアドレスを入力してください';
+        }
+        Alert.alert('登録エラー', errorMessage);
+      }
+    } catch (error) {
+      Alert.alert('エラー', '予期せぬエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSocialSignup = (provider: 'apple' | 'google') => {
-    // TODO: ソーシャルサインアップ実装
-    console.log(`${provider} signup`);
+  const handleSocialSignup = async (provider: OAuthProvider) => {
+    setSocialLoading(provider);
+    try {
+      const result = await signInWithOAuth(provider);
+      
+      if (!result.success) {
+        Alert.alert(
+          '登録エラー',
+          result.error || `${provider === 'apple' ? 'Apple' : 'Google'}での登録に失敗しました`
+        );
+      }
+      // Note: For full OAuth implementation, you'll need to:
+      // 1. Use expo-web-browser to open the OAuth URL
+      // 2. Handle the callback URL with expo-auth-session
+      // 3. Or use native sign-in libraries
+    } catch (error) {
+      Alert.alert('エラー', '予期せぬエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setSocialLoading(null);
+    }
   };
 
   const clearError = (field: keyof FormErrors) => {
@@ -116,6 +179,7 @@ export default function RegisterScreen({ navigation }: Props) {
                   clearError('name');
                 }}
                 autoCapitalize="words"
+                editable={!isLoading}
               />
               {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
             </View>
@@ -135,6 +199,7 @@ export default function RegisterScreen({ navigation }: Props) {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!isLoading}
               />
               {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
@@ -154,10 +219,12 @@ export default function RegisterScreen({ navigation }: Props) {
                   }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  editable={!isLoading}
                 />
                 <TouchableOpacity
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
                 </TouchableOpacity>
@@ -192,10 +259,12 @@ export default function RegisterScreen({ navigation }: Props) {
                   }}
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
+                  editable={!isLoading}
                 />
                 <TouchableOpacity
                   style={styles.eyeButton}
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isLoading}
                 >
                   <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
                 </TouchableOpacity>
@@ -204,8 +273,16 @@ export default function RegisterScreen({ navigation }: Props) {
             </View>
 
             {/* Register Button */}
-            <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-              <Text style={styles.registerButtonText}>アカウント作成</Text>
+            <TouchableOpacity 
+              style={[styles.registerButton, isLoading && styles.buttonDisabled]} 
+              onPress={handleRegister}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.registerButtonText}>アカウント作成</Text>
+              )}
             </TouchableOpacity>
 
             {/* Terms */}
@@ -226,26 +303,40 @@ export default function RegisterScreen({ navigation }: Props) {
 
             {/* Social Signup */}
             <TouchableOpacity 
-              style={styles.socialButton}
+              style={[styles.socialButton, socialLoading === 'apple' && styles.buttonDisabled]}
               onPress={() => handleSocialSignup('apple')}
+              disabled={isLoading || socialLoading !== null}
             >
-              <Text style={styles.socialIcon}>🍎</Text>
-              <Text style={styles.socialButtonText}>Appleで登録</Text>
+              {socialLoading === 'apple' ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <Text style={styles.socialIcon}>🍎</Text>
+                  <Text style={styles.socialButtonText}>Appleで登録</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.socialButton, styles.googleButton]}
+              style={[styles.socialButton, styles.googleButton, socialLoading === 'google' && styles.buttonDisabled]}
               onPress={() => handleSocialSignup('google')}
+              disabled={isLoading || socialLoading !== null}
             >
-              <Text style={styles.socialIcon}>G</Text>
-              <Text style={[styles.socialButtonText, styles.googleButtonText]}>Googleで登録</Text>
+              {socialLoading === 'google' ? (
+                <ActivityIndicator color="#333" />
+              ) : (
+                <>
+                  <Text style={styles.socialIcon}>G</Text>
+                  <Text style={[styles.socialButtonText, styles.googleButtonText]}>Googleで登録</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
 
           {/* Login Link */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>すでにアカウントをお持ちですか？</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
               <Text style={styles.footerLink}>ログイン</Text>
             </TouchableOpacity>
           </View>
@@ -352,7 +443,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 8,
+    minHeight: 56,
     shadowColor: '#FF9800',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -363,6 +456,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   termsText: {
     fontSize: 12,
@@ -398,6 +494,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 14,
     marginBottom: 12,
+    minHeight: 52,
   },
   googleButton: {
     backgroundColor: '#FFF',

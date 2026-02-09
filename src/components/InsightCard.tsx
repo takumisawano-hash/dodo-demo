@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { AGENT_IMAGES } from '../data/agentImages';
+import { useTheme } from '../theme';
 
 export interface Insight {
   id: string;
@@ -13,28 +14,30 @@ interface InsightCardProps {
   insight: Insight;
 }
 
-const TYPE_CONFIG = {
-  tip: {
-    icon: '💡',
-    bgColor: '#FFF3E0',
-    borderColor: '#FF9800',
-    textColor: '#1565C0',
-  },
-  warning: {
-    icon: '⚠️',
-    bgColor: '#FFF3E0',
-    borderColor: '#FFB74D',
-    textColor: '#E65100',
-  },
-  celebration: {
-    icon: '🎉',
-    bgColor: '#E8F5E9',
-    borderColor: '#81C784',
-    textColor: '#2E7D32',
-  },
-};
-
 export default function InsightCard({ insight }: InsightCardProps) {
+  const { colors, isDark } = useTheme();
+
+  const TYPE_CONFIG = {
+    tip: {
+      icon: '💡',
+      bgColor: isDark ? colors.warningLight : '#FFF3E0',
+      borderColor: colors.primary,
+      textColor: isDark ? colors.info : '#1565C0',
+    },
+    warning: {
+      icon: '⚠️',
+      bgColor: isDark ? colors.warningLight : '#FFF3E0',
+      borderColor: colors.warning,
+      textColor: isDark ? colors.warning : '#E65100',
+    },
+    celebration: {
+      icon: '🎉',
+      bgColor: isDark ? colors.successLight : '#E8F5E9',
+      borderColor: colors.success,
+      textColor: isDark ? colors.success : '#2E7D32',
+    },
+  };
+
   const config = TYPE_CONFIG[insight.type];
 
   return (
@@ -57,18 +60,18 @@ export default function InsightCard({ insight }: InsightCardProps) {
       </View>
       
       {/* Agent Flow with Images */}
-      <View style={styles.agentFlowContainer}>
+      <View style={[styles.agentFlowContainer, { borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
         {insight.affectedAgents.map((agentId, index) => (
           <React.Fragment key={agentId}>
-            {index > 0 && <Text style={styles.arrow}>→</Text>}
+            {index > 0 && <Text style={[styles.arrow, { color: colors.textSecondary }]}>→</Text>}
             {AGENT_IMAGES[agentId] ? (
               <Image 
                 source={{ uri: AGENT_IMAGES[agentId] }} 
-                style={styles.agentIcon} 
+                style={[styles.agentIcon, { backgroundColor: colors.surface }]} 
               />
             ) : (
-              <View style={styles.agentIconPlaceholder}>
-                <Text style={styles.agentIconText}>?</Text>
+              <View style={[styles.agentIconPlaceholder, { backgroundColor: colors.border }]}>
+                <Text style={[styles.agentIconText, { color: colors.textTertiary }]}>?</Text>
               </View>
             )}
           </React.Fragment>
@@ -112,29 +115,24 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   agentIcon: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#fff',
   },
   agentIconPlaceholder: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
   },
   agentIconText: {
     fontSize: 12,
-    color: '#999',
   },
   arrow: {
     fontSize: 16,
-    color: '#888',
     marginHorizontal: 6,
   },
 });

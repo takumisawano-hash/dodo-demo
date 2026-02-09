@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { purchaseService, SubscriptionStatus } from '../services/purchases';
 
 const { width } = Dimensions.get('window');
 
@@ -76,12 +79,103 @@ interface Props {
 export default function AgentDetailScreen({ route, navigation }: Props) {
   const { agent } = route.params;
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTrialLoading, setIsTrialLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
 
   // Default values for agents from HomeScreen
   const rating = agent.rating ?? 4.5;
   const reviewCount = agent.reviews ?? 100;
   const price = agent.price ?? 980;
   const subscribers = agent.subscribers ?? 1000;
+
+  // Check subscription status on mount
+  useEffect(() => {
+    const checkSubscription = async () => {
+      await purchaseService.initialize();
+      const status = await purchaseService.getSubscriptionStatus();
+      setSubscriptionStatus(status);
+    };
+    checkSubscription();
+  }, []);
+
+  const handleSubscribe = async () => {
+    Alert.alert(
+      'プレミアムプラン',
+      `${agent.name}のプレミアムプラン（¥${price.toLocaleString()}/月）を購入しますか？`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '購入する',
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              // Use 'basic' plan for agent subscription (or could be 'pro' depending on price)
+              const planId = price >= 980 ? 'pro' : 'basic';
+              const result = await purchaseService.purchasePlan(planId);
+              
+              if (result.success) {
+                const newStatus = await purchaseService.getSubscriptionStatus();
+                setSubscriptionStatus(newStatus);
+                Alert.alert(
+                  '🎉 購入完了',
+                  `${agent.name}のサブスクリプションが開始されました！`,
+                  [{ text: 'OK' }]
+                );
+              } else if (result.cancelled) {
+                // User cancelled, do nothing
+              } else {
+                Alert.alert('エラー', result.error || '購入に失敗しました');
+              }
+            } catch (error) {
+              console.error('Subscription error:', error);
+              Alert.alert('エラー', '購入処理中にエラーが発生しました');
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleStartTrial = async () => {
+    Alert.alert(
+      '7日間無料トライアル',
+      `${agent.name}を7日間無料でお試しいただけます。\n期間中はいつでもキャンセル可能です。`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '無料で試す',
+          onPress: async () => {
+            setIsTrialLoading(true);
+            try {
+              const result = await purchaseService.startFreeTrial();
+              
+              if (result.success) {
+                const newStatus = await purchaseService.getSubscriptionStatus();
+                setSubscriptionStatus(newStatus);
+                Alert.alert(
+                  '🎉 トライアル開始',
+                  '7日間の無料トライアルが開始されました！',
+                  [{ text: 'OK', onPress: () => navigation.navigate('Chat', { agent }) }]
+                );
+              } else if (result.cancelled) {
+                // User cancelled, do nothing
+              } else {
+                Alert.alert('エラー', result.error || 'トライアル開始に失敗しました');
+              }
+            } catch (error) {
+              console.error('Trial error:', error);
+              Alert.alert('エラー', 'トライアル開始中にエラーが発生しました');
+            } finally {
+              setIsTrialLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const renderStars = (r: number) => {
     const fullStars = Math.floor(r);
@@ -92,6 +186,9 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
   };
 
   const displayedReviews = showAllReviews ? SAMPLE_REVIEWS : SAMPLE_REVIEWS.slice(0, 2);
+  
+  // Check if user already has an active subscription
+  const hasActiveSubscription = subscriptionStatus?.isActive || false;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -251,23 +348,47 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
 
       {/* Fixed Bottom Buttons */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={styles.tryButton}
-          onPress={() => navigation.navigate('Chat', { agent })}
-        >
-          <Text style={styles.tryButtonText}>無料で試す</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.subscribeButton, { backgroundColor: agent.color }]}
-          onPress={() => {
-            // TODO: Implement subscription flow
-            alert(`${agent.name}のサブスクリプションを開始します（¥${price.toLocaleString()}/月）`);
-          }}
-        >
-          <Text style={styles.subscribeButtonText}>
-            サブスク開始 ¥{price.toLocaleString()}/月
-          </Text>
-        </TouchableOpacity>
+        {hasActiveSubscription ? (
+          // Already subscribed - just show chat button
+          <TouchableOpacity 
+            style={[styles.subscribedButton, { backgroundColor: agent.color }]}
+            onPress={() => navigation.navigate('Chat', { agent })}
+          >
+            <Text style={styles.subscribeButtonText}>💬 チャットを開始</Text>
+          </TouchableOpacity>
+        ) : (
+          // Not subscribed - show trial and subscribe buttons
+          <>
+            <TouchableOpacity 
+              style={[styles.tryButton, isTrialLoading && styles.buttonDisabled]}
+              onPress={handleStartTrial}
+              disabled={isTrialLoading || isLoading}
+            >
+              {isTrialLoading ? (
+                <ActivityIndicator size="small" color="#333" />
+              ) : (
+                <Text style={styles.tryButtonText}>無料で試す</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.subscribeButton, 
+                { backgroundColor: agent.color },
+                isLoading && styles.buttonDisabled,
+              ]}
+              onPress={handleSubscribe}
+              disabled={isLoading || isTrialLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.subscribeButtonText}>
+                  サブスク開始 ¥{price.toLocaleString()}/月
+                </Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -554,5 +675,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#fff',
+  },
+  subscribedButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });

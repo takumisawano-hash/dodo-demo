@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlanCard, { Plan } from '../components/PlanCard';
+import { purchaseService, SubscriptionStatus } from '../services/purchases';
 
 const PLANS: Plan[] = [
   {
@@ -59,8 +61,29 @@ interface Props {
 
 export default function SubscriptionScreen({ navigation }: Props) {
   const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[1]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [currentSubscription, setCurrentSubscription] = useState<SubscriptionStatus | null>(null);
 
-  const handleSubscribe = () => {
+  // Initialize RevenueCat and check current subscription
+  useEffect(() => {
+    const initPurchases = async () => {
+      await purchaseService.initialize();
+      const status = await purchaseService.getSubscriptionStatus();
+      setCurrentSubscription(status);
+      
+      // Pre-select current plan if subscribed
+      if (status.currentPlan && status.currentPlan !== 'free') {
+        const currentPlanData = PLANS.find(p => p.id === status.currentPlan);
+        if (currentPlanData) {
+          setSelectedPlan(currentPlanData);
+        }
+      }
+    };
+    initPurchases();
+  }, []);
+
+  const handleSubscribe = async () => {
     if (selectedPlan.id === 'free') {
       Alert.alert(
         '無料プラン',
@@ -70,22 +93,63 @@ export default function SubscriptionScreen({ navigation }: Props) {
       return;
     }
 
-    // TODO: Implement actual subscription logic with RevenueCat or similar
+    // Confirm purchase
     Alert.alert(
       '購入確認',
-      `${selectedPlan.name}プラン（¥${selectedPlan.price}/月）を購入しますか？`,
+      `${selectedPlan.name}プラン（¥${selectedPlan.price}/月）を購入しますか？${
+        selectedPlan.id === 'basic' ? '\n\n7日間の無料トライアル付き' : ''
+      }`,
       [
         { text: 'キャンセル', style: 'cancel' },
-        { 
+        {
           text: selectedPlan.id === 'basic' ? '7日間無料で試す' : '購入する',
-          onPress: () => {
-            Alert.alert('完了', '購入が完了しました！', [
-              { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
-          }
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const result = await purchaseService.purchasePlan(selectedPlan.id);
+              
+              if (result.success) {
+                Alert.alert(
+                  '🎉 購入完了',
+                  `${selectedPlan.name}プランへのアップグレードが完了しました！`,
+                  [{ text: 'OK', onPress: () => navigation.goBack() }]
+                );
+              } else if (result.cancelled) {
+                // User cancelled, do nothing
+              } else {
+                Alert.alert('エラー', result.error || '購入に失敗しました');
+              }
+            } catch (error) {
+              console.error('Purchase error:', error);
+              Alert.alert('エラー', '購入処理中にエラーが発生しました');
+            } finally {
+              setIsLoading(false);
+            }
+          },
         },
       ]
     );
+  };
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      const customerInfo = await purchaseService.restorePurchases();
+      if (customerInfo) {
+        const status = await purchaseService.getSubscriptionStatus();
+        setCurrentSubscription(status);
+        
+        if (status.currentPlan && status.currentPlan !== 'free') {
+          Alert.alert('復元完了', `${status.currentPlan.toUpperCase()}プランが復元されました`);
+        } else {
+          Alert.alert('復元完了', '有効なサブスクリプションは見つかりませんでした');
+        }
+      }
+    } catch (error) {
+      Alert.alert('エラー', '購入の復元に失敗しました');
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   return (
@@ -149,19 +213,51 @@ export default function SubscriptionScreen({ navigation }: Props) {
 
       {/* Subscribe Button */}
       <View style={styles.footer}>
+        {/* Current subscription badge */}
+        {currentSubscription?.currentPlan && currentSubscription.currentPlan !== 'free' && (
+          <View style={styles.currentPlanBadge}>
+            <Text style={styles.currentPlanText}>
+              現在のプラン: {currentSubscription.currentPlan.toUpperCase()}
+            </Text>
+          </View>
+        )}
+        
         <TouchableOpacity
-          style={[styles.subscribeButton, { backgroundColor: selectedPlan.color }]}
+          style={[
+            styles.subscribeButton, 
+            { backgroundColor: selectedPlan.color },
+            isLoading && styles.buttonDisabled,
+          ]}
           onPress={handleSubscribe}
           activeOpacity={0.8}
+          disabled={isLoading || isRestoring}
         >
-          <Text style={styles.subscribeButtonText}>
-            {selectedPlan.id === 'free' 
-              ? '無料プランを継続' 
-              : selectedPlan.id === 'basic'
-              ? '7日間無料で試す'
-              : `¥${selectedPlan.price}/月 で始める`}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.subscribeButtonText}>
+              {selectedPlan.id === 'free' 
+                ? '無料プランを継続' 
+                : selectedPlan.id === 'basic'
+                ? '7日間無料で試す'
+                : `¥${selectedPlan.price}/月 で始める`}
+            </Text>
+          )}
         </TouchableOpacity>
+        
+        {/* Restore purchases button */}
+        <TouchableOpacity
+          style={styles.restoreButton}
+          onPress={handleRestore}
+          disabled={isLoading || isRestoring}
+        >
+          {isRestoring ? (
+            <ActivityIndicator size="small" color="#FF9800" />
+          ) : (
+            <Text style={styles.restoreButtonText}>購入を復元</Text>
+          )}
+        </TouchableOpacity>
+        
         <Text style={styles.footerNote}>
           いつでもキャンセル可能 • 自動更新
         </Text>
@@ -323,5 +419,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  restoreButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  restoreButtonText: {
+    color: '#FF9800',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  currentPlanBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
+  currentPlanText: {
+    color: '#2E7D32',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, useI18n } from '../i18n';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useSlots } from '../context/SlotsContext';
+import { useTheme, getAgentCardBackground } from '../theme';
+import { LoadingIndicator } from '../components/LoadingOverlay';
+import { ErrorDisplay, ErrorToast, useErrorHandler } from '../components/ErrorDisplay';
 
 const getGreetingKey = () => {
   const hour = new Date().getHours();
@@ -51,11 +55,45 @@ interface Props {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { language } = useI18n(); // Force re-render on language change
+  const { language } = useI18n();
+  const { colors, isDark } = useTheme();
   const { myCoaches, allAgents } = useSlots();
+  const { error, handleError, clearError } = useErrorHandler();
+  
   const [greetingKey] = useState(getGreetingKey());
   const [tipKey] = useState(DAILY_TIP_KEYS[Math.floor(Math.random() * DAILY_TIP_KEYS.length)]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const userName = 'ユーザー';
+
+  // Simulate initial data loading
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setLoading(false);
+      } catch (e) {
+        handleError(e);
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Simulate API refresh
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (e) {
+      setToastMessage('更新に失敗しました');
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   // Get agent with translated fields
   const getAgentData = (agent: any) => ({
@@ -73,47 +111,99 @@ export default function HomeScreen({ navigation }: Props) {
   // 全エージェント（スロットに入っていないもの）
   const allOtherAgents = allAgents.filter(a => !a.isSubscribed).map(getAgentData);
 
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { backgroundColor: colors.background },
+    text: { color: colors.text },
+    textSecondary: { color: colors.textSecondary },
+    textTertiary: { color: colors.textTertiary },
+    card: { backgroundColor: colors.card },
+    progressCard: { backgroundColor: colors.progressCardBackground },
+    tipCard: { backgroundColor: colors.tipBackground },
+    border: { borderColor: colors.border },
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+        <LoadingIndicator message="読み込み中..." />
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+        <ErrorDisplay 
+          error={error} 
+          onRetry={() => {
+            clearError();
+            setLoading(true);
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
         <View style={styles.header}>
-          <Text style={styles.greeting}>
+          <Text style={[styles.greeting, dynamicStyles.text]}>
             {t('home.welcome', { greeting: t(greetingKey), name: userName })}
           </Text>
-          <Text style={styles.logo}>{t('home.logo')}</Text>
+          <Text style={[styles.logo, dynamicStyles.text]}>{t('home.logo')}</Text>
         </View>
 
-        <View style={styles.progressCard}>
-          <Text style={styles.progressTitle}>{t('home.todayProgress')}</Text>
+        <View style={[styles.progressCard, dynamicStyles.progressCard]}>
+          <Text style={[styles.progressTitle, dynamicStyles.textSecondary]}>{t('home.todayProgress')}</Text>
           <View style={styles.progressStats}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>2/5</Text>
-              <Text style={styles.statLabel}>{t('home.goalsAchieved')}</Text>
+              <Text style={[styles.statValue, dynamicStyles.text]}>2/5</Text>
+              <Text style={[styles.statLabel, dynamicStyles.textSecondary]}>{t('home.goalsAchieved')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>🔥 7</Text>
-              <Text style={styles.statLabel}>{t('home.consecutiveDays')}</Text>
+              <Text style={[styles.statValue, dynamicStyles.text]}>🔥 7</Text>
+              <Text style={[styles.statLabel, dynamicStyles.textSecondary]}>{t('home.consecutiveDays')}</Text>
             </View>
           </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '40%' }]} />
+          <View style={[styles.progressBar, { backgroundColor: colors.progressBackground }]}>
+            <View style={[styles.progressFill, { width: '40%', backgroundColor: colors.primary }]} />
           </View>
         </View>
 
-        <View style={styles.tipCard}>
+        <View style={[styles.tipCard, dynamicStyles.tipCard]}>
           <Text style={styles.tipEmoji}>💡</Text>
-          <Text style={styles.tipText}>{t(tipKey)}</Text>
+          <Text style={[styles.tipText, dynamicStyles.textSecondary]}>{t(tipKey)}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>{t('home.yourCoaches')}</Text>
+        <Text style={[styles.sectionTitle, dynamicStyles.text]}>{t('home.yourCoaches')}</Text>
         {subscribedAgents.map((agent) => (
-          <TouchableOpacity key={agent.id} style={[styles.agentCard, { backgroundColor: agent.color + '20' }]}
-            onPress={() => navigation.navigate('Chat', { agent })} activeOpacity={0.8}>
+          <TouchableOpacity 
+            key={agent.id} 
+            style={[styles.agentCard, { backgroundColor: getAgentCardBackground(agent.color, isDark) }]}
+            onPress={() => navigation.navigate('Chat', { agent })} 
+            activeOpacity={0.8}
+          >
             {/* 吹き出し - 次のアクション */}
             {COACH_NEXT_ACTIONS[agent.id] && (
-              <View style={styles.speechBubble}>
-                <Text style={styles.speechText}>{COACH_NEXT_ACTIONS[agent.id]}</Text>
-                <View style={[styles.speechArrow, { borderTopColor: '#fff' }]} />
+              <View style={[styles.speechBubble, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.speechText, dynamicStyles.text]}>{COACH_NEXT_ACTIONS[agent.id]}</Text>
+                <View style={[styles.speechArrow, { borderTopColor: colors.surface }]} />
               </View>
             )}
             <View style={styles.agentInfo}>
@@ -126,7 +216,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <View style={styles.agentNameRow}>
                   <Text style={[styles.agentName, { color: agent.color }]}>{agent.name}</Text>
                 </View>
-                <Text style={styles.agentRole}>{agent.role}</Text>
+                <Text style={[styles.agentRole, dynamicStyles.textSecondary]}>{agent.role}</Text>
               </View>
               {/* チャットボタン */}
               <View style={[styles.chatIndicator, { backgroundColor: agent.color }]}>
@@ -136,19 +226,22 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         ))}
 
-        <Text style={styles.sectionTitle}>{t('home.recommendedCoaches')}</Text>
+        <Text style={[styles.sectionTitle, dynamicStyles.text]}>{t('home.recommendedCoaches')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recommendedScroll}>
           {recommendedAgents.map((agent) => (
-            <TouchableOpacity key={agent.id} style={[styles.recommendedCard, { backgroundColor: agent.color + '20' }]}
-              onPress={() => navigation.navigate('AgentProfile', { agent })}>
+            <TouchableOpacity 
+              key={agent.id} 
+              style={[styles.recommendedCard, { backgroundColor: getAgentCardBackground(agent.color, isDark) }]}
+              onPress={() => navigation.navigate('AgentProfile', { agent })}
+            >
               {AGENT_IMAGES[agent.id] ? (
                 <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.recommendedImage} />
               ) : (
                 <Text style={styles.recommendedEmoji}>{agent.emoji}</Text>
               )}
               <Text style={[styles.recommendedName, { color: agent.color }]}>{agent.name}</Text>
-              <Text style={styles.recommendedRole}>{agent.role}</Text>
-              <Text style={styles.recommendedKiller}>✨ {agent.killerFeature}</Text>
+              <Text style={[styles.recommendedRole, dynamicStyles.textSecondary]}>{agent.role}</Text>
+              <Text style={[styles.recommendedKiller, dynamicStyles.textTertiary]}>✨ {agent.killerFeature}</Text>
               <View style={[styles.tryButton, { borderColor: agent.color }]}>
                 <Text style={[styles.tryButtonText, { color: agent.color }]}>{t('home.tryAgent')}</Text>
               </View>
@@ -156,12 +249,16 @@ export default function HomeScreen({ navigation }: Props) {
           ))}
         </ScrollView>
 
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, dynamicStyles.text]}>
           {t('home.allAgents', { count: allAgents.length })}
         </Text>
         {allOtherAgents.map((agent) => (
-          <TouchableOpacity key={agent.id} style={[styles.agentCardSmall, { backgroundColor: agent.color + '15' }]}
-            onPress={() => navigation.navigate('AgentProfile', { agent })} activeOpacity={0.8}>
+          <TouchableOpacity 
+            key={agent.id} 
+            style={[styles.agentCardSmall, { backgroundColor: getAgentCardBackground(agent.color, isDark) }]}
+            onPress={() => navigation.navigate('AgentProfile', { agent })} 
+            activeOpacity={0.8}
+          >
             {AGENT_IMAGES[agent.id] ? (
               <Image source={{ uri: AGENT_IMAGES[agent.id] }} style={styles.agentImageSmall} />
             ) : (
@@ -169,38 +266,44 @@ export default function HomeScreen({ navigation }: Props) {
             )}
             <View style={styles.agentTextSmall}>
               <Text style={[styles.agentNameSmall, { color: agent.color }]}>{agent.name}</Text>
-              <Text style={styles.agentRoleSmall}>{agent.role} • {agent.killerFeature}</Text>
+              <Text style={[styles.agentRoleSmall, dynamicStyles.textSecondary]}>{agent.role} • {agent.killerFeature}</Text>
             </View>
-            <Text style={styles.arrow}>→</Text>
+            <Text style={[styles.arrow, dynamicStyles.textTertiary]}>→</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Error Toast */}
+      <ErrorToast 
+        visible={!!toastMessage} 
+        message={toastMessage} 
+        onDismiss={() => setToastMessage('')} 
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, paddingBottom: 16 },
-  greeting: { fontSize: 18, color: '#333' },
+  greeting: { fontSize: 18 },
   logo: { fontSize: 24, fontWeight: 'bold' },
-  progressCard: { backgroundColor: '#FFF3E0', borderRadius: 16, padding: 16, marginBottom: 12 },
-  progressTitle: { fontSize: 14, color: '#666', marginBottom: 12 },
+  progressCard: { borderRadius: 16, padding: 16, marginBottom: 12 },
+  progressTitle: { fontSize: 14, marginBottom: 12 },
   progressStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
   statItem: { alignItems: 'center' },
-  statValue: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  statLabel: { fontSize: 12, color: '#666' },
-  progressBar: { height: 8, backgroundColor: '#FFE0B2', borderRadius: 4 },
-  progressFill: { height: '100%', backgroundColor: '#FF9800', borderRadius: 4 },
-  tipCard: { backgroundColor: '#FFF9C4', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  statValue: { fontSize: 24, fontWeight: 'bold' },
+  statLabel: { fontSize: 12 },
+  progressBar: { height: 8, borderRadius: 4 },
+  progressFill: { height: '100%', borderRadius: 4 },
+  tipCard: { borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   tipEmoji: { fontSize: 24, marginRight: 12 },
-  tipText: { flex: 1, fontSize: 14, color: '#666' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: 8, marginBottom: 12 },
+  tipText: { flex: 1, fontSize: 14 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 12 },
   agentCard: { borderRadius: 20, padding: 20, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 },
   speechBubble: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -211,11 +314,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     position: 'relative',
   },
-  speechText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
+  speechText: { fontSize: 14, lineHeight: 20 },
   speechArrow: {
     position: 'absolute',
     bottom: -8,
@@ -227,38 +326,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#fff',
   },
   agentInfo: { flexDirection: 'row', alignItems: 'center' },
   agentEmoji: { fontSize: 48, marginRight: 16 },
-  chatIndicator: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  chatIndicatorText: {
-    fontSize: 20,
-  },
+  chatIndicator: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginLeft: 8 },
+  chatIndicatorText: { fontSize: 20 },
   agentImage: { width: 60, height: 60, marginRight: 16, borderRadius: 30 },
   agentText: { flex: 1 },
   agentNameRow: { flexDirection: 'row', alignItems: 'center' },
   agentName: { fontSize: 24, fontWeight: 'bold' },
-  subscribedBadge: { backgroundColor: '#4CAF50', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginLeft: 8 },
-  subscribedText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  agentRole: { fontSize: 14, color: '#666', marginTop: 2 },
-  killerFeature: { fontSize: 12, color: '#888', marginTop: 4 },
-  chatButton: { marginTop: 16, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 25, alignSelf: 'flex-start' },
-  chatButtonText: { color: 'white', fontWeight: '600', fontSize: 14 },
+  agentRole: { fontSize: 14, marginTop: 2 },
   recommendedScroll: { marginBottom: 20 },
   recommendedCard: { width: 140, borderRadius: 16, padding: 16, marginRight: 12, alignItems: 'center' },
   recommendedEmoji: { fontSize: 40, marginBottom: 8 },
   recommendedImage: { width: 56, height: 56, marginBottom: 8, borderRadius: 28 },
   recommendedName: { fontSize: 16, fontWeight: 'bold' },
-  recommendedRole: { fontSize: 11, color: '#666' },
-  recommendedKiller: { fontSize: 10, color: '#888', marginTop: 4, marginBottom: 8, textAlign: 'center' },
+  recommendedRole: { fontSize: 11 },
+  recommendedKiller: { fontSize: 10, marginTop: 4, marginBottom: 8, textAlign: 'center' },
   tryButton: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
   tryButtonText: { fontSize: 11, fontWeight: '600' },
   agentCardSmall: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 12, marginBottom: 8 },
@@ -266,6 +350,6 @@ const styles = StyleSheet.create({
   agentImageSmall: { width: 40, height: 40, marginRight: 12, borderRadius: 20 },
   agentTextSmall: { flex: 1 },
   agentNameSmall: { fontSize: 16, fontWeight: 'bold' },
-  agentRoleSmall: { fontSize: 11, color: '#666' },
-  arrow: { fontSize: 18, color: '#999' },
+  agentRoleSmall: { fontSize: 11 },
+  arrow: { fontSize: 18 },
 });

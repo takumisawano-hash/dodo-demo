@@ -223,6 +223,90 @@ export function onAuthStateChange(
 }
 
 // ----------------------------------------
+// Social Auth (OAuth)
+// ----------------------------------------
+
+export type OAuthProvider = 'apple' | 'google';
+
+/**
+ * Sign in with OAuth provider (Apple/Google)
+ * Note: Requires expo-auth-session and proper Supabase OAuth configuration
+ */
+export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResult> {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        skipBrowserRedirect: true, // Handle redirect manually in React Native
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // data.url contains the OAuth URL to open
+    return {
+      success: true,
+      // For React Native, you'll need to open data.url in a browser
+      // and handle the callback with expo-auth-session or expo-web-browser
+    };
+  } catch (err) {
+    return { success: false, error: getErrorMessage(err) };
+  }
+}
+
+/**
+ * Sign in with Apple ID token (for native Apple Sign In)
+ */
+export async function signInWithAppleIdToken(idToken: string, nonce?: string): Promise<AuthResult> {
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: idToken,
+      nonce,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return {
+      success: true,
+      user: data.user ?? undefined,
+      session: data.session ?? undefined,
+    };
+  } catch (err) {
+    return { success: false, error: getErrorMessage(err) };
+  }
+}
+
+/**
+ * Sign in with Google ID token (for native Google Sign In)
+ */
+export async function signInWithGoogleIdToken(idToken: string, accessToken?: string): Promise<AuthResult> {
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+      access_token: accessToken,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return {
+      success: true,
+      user: data.user ?? undefined,
+      session: data.session ?? undefined,
+    };
+  } catch (err) {
+    return { success: false, error: getErrorMessage(err) };
+  }
+}
+
+// ----------------------------------------
 // Utility Functions
 // ----------------------------------------
 

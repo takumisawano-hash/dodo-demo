@@ -8,8 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { resetPassword } from '../services/supabase';
 
 interface Props {
   navigation: any;
@@ -19,6 +22,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const validateEmail = () => {
     if (!email) {
@@ -33,17 +38,51 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
     return true;
   };
 
-  const handleSubmit = () => {
-    if (validateEmail()) {
-      // TODO: 実際のパスワードリセット処理
-      console.log('Password reset for:', email);
-      setIsSubmitted(true);
+  const handleSubmit = async () => {
+    if (!validateEmail()) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await resetPassword(email);
+      
+      if (result.success) {
+        setIsSubmitted(true);
+      } else {
+        // Map common Supabase errors to Japanese
+        let errorMessage = result.error || 'パスワードリセットに失敗しました';
+        if (result.error?.includes('User not found')) {
+          errorMessage = 'このメールアドレスは登録されていません';
+        } else if (result.error?.includes('Email rate limit exceeded')) {
+          errorMessage = 'メール送信の制限に達しました。しばらく待ってからお試しください';
+        }
+        Alert.alert('エラー', errorMessage);
+      }
+    } catch (error) {
+      Alert.alert('エラー', '予期せぬエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleResend = () => {
-    // TODO: 再送信処理
-    console.log('Resend password reset email');
+  const handleResend = async () => {
+    setIsResending(true);
+    try {
+      const result = await resetPassword(email);
+      
+      if (result.success) {
+        Alert.alert('送信完了', 'パスワードリセットメールを再送信しました。');
+      } else {
+        let errorMessage = result.error || '再送信に失敗しました';
+        if (result.error?.includes('Email rate limit exceeded')) {
+          errorMessage = 'メール送信の制限に達しました。しばらく待ってからお試しください';
+        }
+        Alert.alert('エラー', errorMessage);
+      }
+    } catch (error) {
+      Alert.alert('エラー', '予期せぬエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsResending(false);
+    }
   };
 
   if (isSubmitted) {
@@ -68,10 +107,15 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             </Text>
 
             <TouchableOpacity 
-              style={styles.resendButton}
+              style={[styles.resendButton, isResending && styles.buttonDisabled]}
               onPress={handleResend}
+              disabled={isResending}
             >
-              <Text style={styles.resendButtonText}>メールが届かない場合は再送信</Text>
+              {isResending ? (
+                <ActivityIndicator color="#FF9800" size="small" />
+              ) : (
+                <Text style={styles.resendButtonText}>メールが届かない場合は再送信</Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -101,6 +145,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            disabled={isLoading}
           >
             <Text style={styles.backButtonText}>← 戻る</Text>
           </TouchableOpacity>
@@ -133,13 +178,22 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoFocus
+                editable={!isLoading}
               />
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>リセットリンクを送信</Text>
+            <TouchableOpacity 
+              style={[styles.submitButton, isLoading && styles.buttonDisabled]} 
+              onPress={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.submitButtonText}>リセットリンクを送信</Text>
+              )}
             </TouchableOpacity>
 
             {/* Info */}
@@ -154,7 +208,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>パスワードを思い出しましたか？</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
               <Text style={styles.footerLink}>ログイン</Text>
             </TouchableOpacity>
           </View>
@@ -242,6 +296,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
     shadowColor: '#FF9800',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -252,6 +308,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   infoContainer: {
     flexDirection: 'row',
@@ -268,7 +327,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#1976D2',
+    color: '#E65100',
     lineHeight: 20,
   },
   footer: {
@@ -318,6 +377,8 @@ const styles = StyleSheet.create({
   resendButton: {
     paddingVertical: 12,
     marginBottom: 16,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   resendButtonText: {
     color: '#FF9800',
