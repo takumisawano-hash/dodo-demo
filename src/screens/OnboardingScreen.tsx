@@ -367,7 +367,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const showNextButton = !isLastSlide; // 最後はエージェント選択で完了
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         {!isLastSlide && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>

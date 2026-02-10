@@ -108,7 +108,7 @@ export default function PaywallScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <TouchableOpacity style={[styles.closeButton, { backgroundColor: isDark ? '#333' : '#F5F5F5' }]} onPress={handleDismiss}>
         <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>あとで</Text>
       </TouchableOpacity>

@@ -203,7 +203,7 @@ export default function AgentDetailScreen({ route, navigation }: Props) {
   const hasActiveSubscription = subscriptionStatus?.isActive || false;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

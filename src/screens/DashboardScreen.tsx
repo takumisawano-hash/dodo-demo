@@ -196,14 +196,14 @@ export default function DashboardScreen({ navigation }: Props) {
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+      <SafeAreaView edges={["top"]} style={[styles.container, dynamicStyles.container]}>
         <ErrorDisplay error={error} onRetry={clearError} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, dynamicStyles.container]}>
       <View style={styles.header}>
         <Text style={[styles.title, dynamicStyles.text]}>{t('dashboard.title')}</Text>
       </View>

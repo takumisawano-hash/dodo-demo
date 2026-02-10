@@ -67,7 +67,7 @@ export default function ProgressScreen() {
   const achievedBadges = BADGES.filter((b) => b.achieved).length;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>進捗レポート</Text>
         <View style={[styles.periodToggle, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>

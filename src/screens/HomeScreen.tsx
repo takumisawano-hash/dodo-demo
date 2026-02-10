@@ -82,10 +82,10 @@ const AddCoachCard = ({
         </View>
         <View style={styles.addCoachTextContainer}>
           <Text style={[styles.addCoachTitle, { color: colors.text }]}>
-            コーチを追加しよう！
+            {t('home.addCoach')}
           </Text>
           <Text style={[styles.addCoachDesc, { color: colors.textSecondary }]}>
-            あと{emptyCount}人のコーチを追加できます
+            {t('home.addCoachDesc', { count: emptyCount })}
           </Text>
         </View>
         <View style={styles.addCoachButton}>

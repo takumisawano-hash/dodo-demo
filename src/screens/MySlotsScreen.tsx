@@ -254,7 +254,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
   const slots = Array.from({ length: totalSlots }, (_, i) => assignedAgents[i] || null);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}

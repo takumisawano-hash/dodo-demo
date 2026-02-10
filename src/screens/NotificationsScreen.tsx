@@ -261,7 +261,7 @@ export default function NotificationsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
         <TouchableOpacity

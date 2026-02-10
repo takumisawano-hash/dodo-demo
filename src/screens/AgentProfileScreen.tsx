@@ -232,14 +232,14 @@ export default function AgentProfileScreen({ route, navigation }: Props) {
 
   if (!profile) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={{ color: colors.text }}>プロフィールが見つかりません</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* ヘッダー */}
         <View style={[styles.header, { backgroundColor: agent.color + (isDark ? '30' : '20') }]}>
