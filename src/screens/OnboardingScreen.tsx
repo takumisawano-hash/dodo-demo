@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { AGENT_IMAGES } from '../data/agentImages';
+import { t } from '../i18n';
 
 const { width, height } = Dimensions.get('window');
 
@@ -69,31 +70,31 @@ const ONBOARDING_DATA: OnboardingSlide[] = [
   {
     id: '1',
     type: 'welcome',
-    title: 'DoDo へようこそ！',
-    subtitle: 'あなた専用のAIコーチが\n目標達成をサポートします',
+    title: 'onboarding.welcome',
+    subtitle: 'onboarding.welcomeSubtitle',
     color: '#FF9800',
     bgColor: '#FFF3E0',
   },
   {
     id: '2',
     type: 'features',
-    title: 'こんなことができます',
+    title: 'onboarding.features',
     color: '#81C784',
     bgColor: '#E8F5E9',
   },
   {
     id: '3',
     type: 'howto',
-    title: '話しかけるだけでOK！',
-    subtitle: 'ボタンをタップして簡単スタート',
+    title: 'onboarding.howto',
+    subtitle: 'onboarding.howtoSubtitle',
     color: '#BA68C8',
     bgColor: '#F3E5F5',
   },
   {
     id: '4',
     type: 'select-agent',
-    title: '最初のコーチを選ぼう',
-    subtitle: 'あとで変更もできます',
+    title: 'onboarding.selectCoach',
+    subtitle: 'onboarding.selectCoachSubtitle',
     color: '#FFB74D',
     bgColor: '#FFF3E0',
   },
@@ -172,8 +173,8 @@ export default function OnboardingScreen({ onComplete }: Props) {
             style={styles.agentImageTiny}
           />
         </View>
-        <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+        <Text style={[styles.title, { color: item.color }]}>{t(item.title)}</Text>
+        <Text style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>{item.subtitle ? t(item.subtitle) : ''}</Text>
       </View>
     </View>
   );
@@ -182,38 +183,38 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const renderFeatures = (item: OnboardingSlide) => (
     <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
+        <Text style={[styles.title, { color: item.color }]}>{t(item.title)}</Text>
         
         <View style={styles.featuresContainer}>
           <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📝</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 毎日の記録をサポート</Text>
-              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>活動や気分を簡単に記録</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>{t('onboarding.featureRecord')}</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('onboarding.featureRecordDesc')}</Text>
             </View>
           </View>
           
           <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📅</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 週間プランを自動作成</Text>
-              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>あなたに合った計画を提案</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>{t('onboarding.featurePlan')}</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('onboarding.featurePlanDesc')}</Text>
             </View>
           </View>
           
           <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>🔔</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ リマインダーで習慣化</Text>
-              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>忘れずに続けられる</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>{t('onboarding.featureReminder')}</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('onboarding.featureReminderDesc')}</Text>
             </View>
           </View>
           
           <View style={[styles.featureRow, { backgroundColor: colors.card }]}>
             <Text style={styles.featureIcon}>📊</Text>
             <View style={styles.featureTextContainer}>
-              <Text style={[styles.featureCheck, { color: colors.text }]}>✅ 進捗を可視化</Text>
-              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>成長が目に見える</Text>
+              <Text style={[styles.featureCheck, { color: colors.text }]}>{t('onboarding.featureProgress')}</Text>
+              <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('onboarding.featureProgressDesc')}</Text>
             </View>
           </View>
         </View>
@@ -226,28 +227,28 @@ export default function OnboardingScreen({ onComplete }: Props) {
     <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
       <View style={styles.content}>
         <Text style={styles.howtoEmoji}>💬</Text>
-        <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={[styles.howtoSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+        <Text style={[styles.title, { color: item.color }]}>{t(item.title)}</Text>
+        <Text style={[styles.howtoSubtitle, { color: colors.textSecondary }]}>{item.subtitle ? t(item.subtitle) : ''}</Text>
         
         {/* クイックアクションボタンのプレビュー */}
         <View style={[styles.quickActionsPreview, { backgroundColor: colors.card }]}>
-          <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>ワンタップで操作</Text>
+          <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>{t('onboarding.oneTap')}</Text>
           <View style={styles.previewButtons}>
             <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#FFF3E0' }]}>
               <Text style={styles.previewButtonEmoji}>📝</Text>
-              <Text style={[styles.previewButtonText, { color: colors.text }]}>記録</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>{t('onboarding.record')}</Text>
             </View>
             <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#FFF3E0' }]}>
               <Text style={styles.previewButtonEmoji}>📊</Text>
-              <Text style={[styles.previewButtonText, { color: colors.text }]}>進捗</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>{t('onboarding.progress')}</Text>
             </View>
             <View style={[styles.previewButton, { backgroundColor: isDark ? colors.successLight : '#E8F5E9' }]}>
               <Text style={styles.previewButtonEmoji}>💡</Text>
-              <Text style={[styles.previewButtonText, { color: colors.text }]}>アドバイス</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>{t('onboarding.advice')}</Text>
             </View>
             <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#E3F2FD' }]}>
               <Text style={styles.previewButtonEmoji}>⏰</Text>
-              <Text style={[styles.previewButtonText, { color: colors.text }]}>リマインド</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>{t('onboarding.remind')}</Text>
             </View>
           </View>
         </View>
@@ -255,8 +256,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
         <View style={[styles.tipContainer, { backgroundColor: isDark ? 'rgba(186, 104, 200, 0.2)' : 'rgba(186, 104, 200, 0.15)' }]}>
           <Text style={styles.tipIcon}>💡</Text>
           <Text style={[styles.tipText, { color: isDark ? '#CE93D8' : '#7B1FA2' }]}>
-            わからなくなったら{'\n'}
-            「何ができる？」と聞いてね
+            {t('onboarding.tipAsk')}
           </Text>
         </View>
       </View>
@@ -271,8 +271,8 @@ export default function OnboardingScreen({ onComplete }: Props) {
           source={{ uri: AGENT_IMAGES['diet-coach'] }} 
           style={styles.selectHeaderImage}
         />
-        <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
-        <Text style={[styles.selectSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+        <Text style={[styles.title, { color: item.color }]}>{t(item.title)}</Text>
+        <Text style={[styles.selectSubtitle, { color: colors.textSecondary }]}>{item.subtitle ? t(item.subtitle) : ''}</Text>
         
         <View style={styles.agentsContainer}>
           {POPULAR_AGENTS.map((agent) => (
@@ -371,12 +371,12 @@ export default function OnboardingScreen({ onComplete }: Props) {
       <View style={styles.header}>
         {!isLastSlide && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={[styles.skipText, { color: colors.textSecondary }]}>スキップ</Text>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         )}
         {isLastSlide && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={[styles.skipText, { color: colors.textSecondary }]}>あとで選ぶ</Text>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>{t('onboarding.selectLater')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -409,13 +409,13 @@ export default function OnboardingScreen({ onComplete }: Props) {
             onPress={handleNext}
             activeOpacity={0.8}
           >
-            <Text style={styles.nextButtonText}>次へ →</Text>
+            <Text style={styles.nextButtonText}>{t('onboarding.next')}</Text>
           </TouchableOpacity>
         )}
         {isLastSlide && (
           <View style={styles.selectHint}>
             <Text style={styles.selectHintText}>
-              👆 タップしてコーチを選択
+              {t('onboarding.tapToSelect')}
             </Text>
           </View>
         )}
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   dot: {
     height: 8,
@@ -701,8 +701,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    minHeight: 70,
+    paddingBottom: 40,
+    paddingTop: 10,
+    minHeight: 90,
   },
   nextButton: {
     paddingVertical: 16,

@@ -288,6 +288,97 @@ export const en = {
     },
   },
 
+  // Onboarding
+  onboarding: {
+    welcome: 'Welcome to DoDo!',
+    welcomeSubtitle: 'Your personal AI coach\nwill support your goals',
+    features: "Here's what you can do",
+    featureRecord: '✅ Daily progress tracking',
+    featureRecordDesc: 'Easily log activities and mood',
+    featurePlan: '✅ Auto weekly planning',
+    featurePlanDesc: 'Personalized plans just for you',
+    featureReminder: '✅ Habit reminders',
+    featureReminderDesc: 'Never forget to stay consistent',
+    featureProgress: '✅ Progress visualization',
+    featureProgressDesc: 'See your growth clearly',
+    howto: 'Just talk to me!',
+    howtoSubtitle: 'Tap to start easily',
+    selectCoach: 'Choose your first coach',
+    selectCoachSubtitle: 'You can change later',
+    skip: 'Skip',
+    selectLater: 'Choose later',
+    next: 'Next →',
+    tapToSelect: '👆 Tap to select a coach',
+    oneTap: 'One-tap actions',
+    record: 'Log',
+    progress: 'Progress',
+    advice: 'Tips',
+    remind: 'Remind',
+    tipAsk: "If you're unsure,\njust ask \"What can you do?\"",
+  },
+
+  // My Slots
+  mySlots: {
+    title: 'My Slots',
+    subtitle: 'Swap coaches freely',
+    currentPlan: 'Current Plan',
+    changePlan: 'Change Plan →',
+    slots: 'Slots',
+    todayUsage: "Today's Usage",
+    additionalSlots: '📦 Additional slots: {{count}} (+¥{{price}}/mo)',
+    upgradeTitle: '🚀 Upgrade to Pro',
+    upgradeDesc: 'Unlimited access to all 15 agents!',
+    slotsAvailable: '{{count}} slots available',
+    slotsList: 'Slot List',
+    addSlot: 'Add Slot',
+    addSlotPrice: '+¥{{price}}/mo',
+    addMessages: 'Add Messages',
+    addMessagesAmount: '+{{count}} messages',
+    addMessagesPrice: '¥{{price}}',
+    additionalPurchases: '📦 Active Add-ons',
+    slotsAddon: 'Slots +{{count}} (+¥{{price}}/mo)',
+    messagesAddon: 'Messages +{{count}} (¥{{price}})',
+    selectPlan: 'Choose Plan',
+    addCoach: 'Add Coach',
+    tapToSelect: 'Tap to select →',
+    confirmAddSlot: 'Add 1 slot?\n\n+¥{{price}}/mo',
+    confirmAddMessages: 'Add {{count}} messages?\n\n+¥{{price}}',
+    slotAdded: 'Slot added!',
+    messagesAdded: '{{count}} messages added!',
+    alreadyAdded: '{{name}} is already in your slots.',
+    coachAdded: '{{name}} added!',
+  },
+
+  // Market
+  market: {
+    title: 'Agent Market',
+    subtitle: 'Find AI agents',
+    searchPlaceholder: 'Search agents...',
+    agentsFound: '{{count}} agents found',
+    noResults: 'No matching agents found',
+  },
+
+  // Chat additions
+  chatExtras: {
+    coachRequest: 'Your request for a "{{topic}}" coach has been received. Coming in future updates! ✨',
+    coachRequestPrompt: 'Want a "{{topic}}" coach?',
+    imageSelectFailed: 'Failed to select image',
+    addImage: 'Add image',
+    coachInfo: 'Coach Info',
+    setReminder: 'Set Reminder',
+    reminderPrompt: "Let's set a reminder!",
+    setReminderBtn: 'Set up',
+  },
+
+  // Agent Profile
+  agentProfile: {
+    addToMyCoaches: 'Add to My Coaches',
+    plan: 'Plan',
+    similarCoaches: 'Similar Coaches',
+    premiumPlan: 'Premium Plan',
+    confirmPremium: 'Purchase {{name}} premium plan (¥{{price}}/mo)?',
+  },
+
   // Metrics
   metrics: {
     weightChange: 'Weight Change',

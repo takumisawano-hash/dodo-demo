@@ -1,0 +1,35 @@
+appId: com.sawataku.dodo
+name: DoDo Quick Smoke Test
+---
+
+# 起動
+- launchApp:
+    clearState: true
+
+- takeScreenshot: "quick-01-launch"
+
+# オンボーディングをスキップ
+- tapOn:
+    text: ".*[Ss]kip.*|.*スキップ.*"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "quick-02-home"
+
+# 全タブを確認
+- tapOn:
+    index: 1
+- waitForAnimationToEnd
+- takeScreenshot: "quick-03-tab2"
+
+- tapOn:
+    index: 2
+- waitForAnimationToEnd
+- takeScreenshot: "quick-04-tab3"
+
+- tapOn:
+    index: 3
+- waitForAnimationToEnd
+- takeScreenshot: "quick-05-settings"
+
+- takeScreenshot: "quick-99-done"

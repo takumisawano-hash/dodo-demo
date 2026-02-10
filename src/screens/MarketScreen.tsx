@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import { t } from '../i18n';
 import { AGENT_IMAGES } from '../data/agentImages';
 
 // Categories
@@ -182,14 +183,14 @@ export default function MarketScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.logo, { color: colors.text }]}>🏪 マーケット</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>AIエージェントを探す</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('market.subtitle')}</Text>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={[styles.searchInput, { backgroundColor: colors.card, color: colors.text }]}
-          placeholder="エージェントを検索..."
+          placeholder={t('market.searchPlaceholder')}
           placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -329,7 +330,7 @@ export default function MarketScreen({ navigation }: Props) {
         {filteredAgents.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>該当するエージェントが見つかりません</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('market.noResults')}</Text>
           </View>
         )}
       </ScrollView>

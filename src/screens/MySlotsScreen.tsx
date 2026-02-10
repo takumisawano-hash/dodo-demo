@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AGENT_IMAGES } from '../data/agentImages';
 import { useSlots, Agent } from '../context/SlotsContext';
 import { useTheme } from '../theme';
+import { t } from '../i18n';
 
 interface Plan {
   id: string;
@@ -103,8 +104,8 @@ const EmptySlotButton = ({
         <Text style={styles.addIconTextAnimated}>＋</Text>
       </Animated.View>
       <View style={styles.emptySlotTextContainer}>
-        <Text style={[styles.emptySlotTextBold, { color: colors.text }]}>コーチを追加</Text>
-        <Text style={[styles.emptySlotHint, { color: colors.textSecondary }]}>タップして選択 →</Text>
+        <Text style={[styles.emptySlotTextBold, { color: colors.text }]}>{t('mySlots.addCoach')}</Text>
+        <Text style={[styles.emptySlotHint, { color: colors.textSecondary }]}>{t('mySlots.tapToSelect')}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -264,8 +265,8 @@ export default function MySlotsScreen({ navigation, route }: Props) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Text style={[styles.backText, { color: colors.primary }]}>← 戻る</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>マイスロット</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>コーチを自由に入れ替えよう</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('mySlots.title')}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('mySlots.subtitle')}</Text>
         </View>
 
         {/* Free Trial 残り日数表示 */}
@@ -280,7 +281,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
               style={styles.trialButton}
               onPress={() => navigation.navigate('Pricing')}
             >
-              <Text style={styles.trialButtonText}>プランを選ぶ</Text>
+              <Text style={styles.trialButtonText}>{t('mySlots.selectPlan')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -289,21 +290,21 @@ export default function MySlotsScreen({ navigation, route }: Props) {
         <View style={styles.planCard}>
           <View style={styles.planHeader}>
             <View style={styles.planInfo}>
-              <Text style={styles.planLabel}>現在のプラン</Text>
+              <Text style={styles.planLabel}>{t('mySlots.currentPlan')}</Text>
               <Text style={styles.planName}>{currentPlan.name}</Text>
             </View>
             <TouchableOpacity 
               style={styles.changePlanButton}
               onPress={() => navigation.navigate('Pricing')}
             >
-              <Text style={styles.changePlanText}>プラン変更 →</Text>
+              <Text style={styles.changePlanText}>{t('mySlots.changePlan')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* スロット使用状況 */}
           <View style={styles.statRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>スロット</Text>
+              <Text style={styles.statLabel}>{t('mySlots.slots')}</Text>
               <Text style={styles.statValue}>{usedSlots}/{totalSlots}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={[styles.progressBar, { width: `${slotUsagePercent}%`, backgroundColor: '#FF9800' }]} />
@@ -311,7 +312,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>今日の使用回数</Text>
+              <Text style={styles.statLabel}>{t('mySlots.todayUsage')}</Text>
               <Text style={styles.statValue}>{planInfo.usedToday}/{planInfo.dailyLimit}</Text>
               <View style={styles.progressBarContainer}>
                 <View 
@@ -365,7 +366,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
         </View>
 
         {/* スロット一覧 */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>スロット一覧</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('mySlots.slotsList')}</Text>
         
         {slots.map((agent, index) => (
           <View key={index} style={[styles.slotCard, { backgroundColor: colors.card }]}>
@@ -425,7 +426,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
               <Text style={styles.addSlotIconText}>＋</Text>
             </View>
             <View style={styles.addSlotInfo}>
-              <Text style={styles.addSlotTitle}>スロットを追加</Text>
+              <Text style={styles.addSlotTitle}>{t('mySlots.addSlot')}</Text>
               <Text style={styles.addSlotPrice}>+¥{ADDITIONAL_SLOT_PRICE}/月</Text>
             </View>
             <Text style={styles.addSlotArrow}>→</Text>
@@ -441,7 +442,7 @@ export default function MySlotsScreen({ navigation, route }: Props) {
             <Text style={styles.addSlotIconText}>💬</Text>
           </View>
           <View style={styles.addSlotInfo}>
-            <Text style={styles.addSlotTitle}>会話回数を追加</Text>
+            <Text style={styles.addSlotTitle}>{t('mySlots.addMessages')}</Text>
             <Text style={styles.addSlotPrice}>+{ADDITIONAL_MESSAGES_AMOUNT}回 / ¥{ADDITIONAL_MESSAGES_PRICE}</Text>
           </View>
           <Text style={styles.addSlotArrow}>→</Text>

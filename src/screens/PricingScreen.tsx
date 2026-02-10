@@ -125,6 +125,7 @@ export default function PricingScreen({ navigation, route }: Props) {
   const [currentPlan, setCurrentPlan] = useState('trial');
   const [isYearly, setIsYearly] = useState(true); // Default to yearly for savings
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   
@@ -137,6 +138,9 @@ export default function PricingScreen({ navigation, route }: Props) {
   // Load current subscription status
   useEffect(() => {
     loadCurrentPlan();
+    // 初期化完了を少し遅らせて表示
+    const timer = setTimeout(() => setIsInitialized(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Animate best value badge
@@ -158,6 +162,8 @@ export default function PricingScreen({ navigation, route }: Props) {
       }
     } catch (error) {
       console.error('Failed to load subscription status:', error);
+      // エラーが発生してもデフォルト値（trial）で続行
+      setCurrentPlan('trial');
     }
   };
 
@@ -267,8 +273,20 @@ export default function PricingScreen({ navigation, route }: Props) {
     outputRange: [1, 1.05],
   });
 
+  // 初期化中はローディング表示
+  if (!isInitialized) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>読み込み中...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.headerSection}>
@@ -550,6 +568,13 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 100 },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: { fontSize: 16 },
   
   // Header
   headerSection: { marginBottom: 24 },

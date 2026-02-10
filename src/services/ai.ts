@@ -11,6 +11,10 @@ import {
   getSafeResponse 
 } from './security';
 import { generateUserContext, extractUserInfoFromMessage, updateUserProfile } from './chatSync';
+import { supabase } from './supabase';
+
+// Edge Function経由でAIを呼び出すかどうか
+const USE_EDGE_FUNCTION = true;
 
 // ----------------------------------------
 // Types
@@ -51,6 +55,39 @@ const DEFAULT_CONFIG: AIConfig = {
   maxTokens: 500,
   temperature: 0.7,
 };
+
+// ----------------------------------------
+// Haiku/Sonnet 自動切り替えロジック
+// ----------------------------------------
+const CLAUDE_MODELS = {
+  HAIKU: 'claude-3-haiku-20240307',
+  SONNET: 'claude-3-5-sonnet-20241022',
+};
+
+/**
+ * メッセージの複雑さに応じてモデルを自動選択
+ * - 簡単な質問 → Haiku (高速・低コスト)
+ * - 複雑な質問 → Sonnet (高品質)
+ */
+function selectAnthropicModel(
+  userMessage: string,
+  conversationHistory: ChatMessage[]
+): string {
+  const messageLength = userMessage.length;
+  const historyLength = conversationHistory.length;
+  
+  // 複雑さの判定基準
+  const isComplex = 
+    messageLength > 300 ||           // 長いメッセージ
+    historyLength > 8 ||             // 長い会話履歴
+    /計画|プラン|分析|詳し|教えて.*方法|どうすれば|なぜ|理由/i.test(userMessage) || // 複雑な質問パターン
+    /plan|analyze|explain|how.*should|why|detail/i.test(userMessage);
+  
+  const selectedModel = isComplex ? CLAUDE_MODELS.SONNET : CLAUDE_MODELS.HAIKU;
+  console.log(`[AI] Model selected: ${selectedModel} (complex: ${isComplex}, msgLen: ${messageLength}, history: ${historyLength})`);
+  
+  return selectedModel;
+}
 
 // ----------------------------------------
 // API Keys (本番では環境変数から取得)
@@ -167,7 +204,8 @@ async function handleOpenAIStream(
 async function callAnthropic(
   messages: ChatMessage[],
   stream: boolean = false,
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
+  autoSelectModel: boolean = true
 ): Promise<AIResponse> {
   if (!config.anthropicApiKey) {
     throw new Error('Anthropic API key not configured');
@@ -176,6 +214,15 @@ async function callAnthropic(
   // システムメッセージを分離
   const systemMessage = messages.find(m => m.role === 'system');
   const chatMessages = messages.filter(m => m.role !== 'system');
+  
+  // ユーザーメッセージと会話履歴を取得
+  const userMessages = chatMessages.filter(m => m.role === 'user');
+  const lastUserMessage = userMessages[userMessages.length - 1]?.content || '';
+  
+  // モデル自動選択（Haiku/Sonnet）
+  const model = autoSelectModel 
+    ? selectAnthropicModel(lastUserMessage, chatMessages.slice(0, -1))
+    : config.anthropicModel;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -185,7 +232,7 @@ async function callAnthropic(
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: config.anthropicModel,
+      model,
       max_tokens: config.maxTokens,
       system: systemMessage?.content || '',
       messages: chatMessages.map(m => ({
@@ -434,8 +481,55 @@ export async function sendChatMessage(
 
   let response: AIResponse;
 
-  // OpenAI APIを試行
-  if (config.openaiApiKey) {
+  // ========================================
+  // Edge Function経由でAIを呼び出す（推奨）
+  // ========================================
+  if (USE_EDGE_FUNCTION) {
+    try {
+      callbacks?.onStart?.();
+      
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: {
+          message: userMessage,
+          history: conversationHistory.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          systemPrompt,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
+
+      const content = data.content;
+      
+      // ストリーミング風に表示
+      if (stream && callbacks?.onToken) {
+        for (let i = 0; i < content.length; i++) {
+          callbacks.onToken(content[i]);
+          await new Promise(resolve => setTimeout(resolve, 15));
+        }
+      }
+      
+      callbacks?.onComplete?.(content);
+      
+      response = {
+        content,
+        provider: 'anthropic',
+        tokensUsed: data.tokensUsed,
+      };
+    } catch (error) {
+      console.warn('Edge Function failed, falling back to direct API:', error);
+      callbacks?.onError?.(error as Error);
+      // フォールバック: 直接API呼び出し
+      response = await tryAnthropicOrMock(coachId, userMessage, messages, stream, callbacks);
+    }
+  }
+  // ========================================
+  // 直接API呼び出し（フォールバック）
+  // ========================================
+  else if (config.openaiApiKey) {
     try {
       response = await callOpenAI(messages, stream, callbacks);
     } catch (error) {

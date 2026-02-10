@@ -295,6 +295,97 @@ export const ja = {
     },
   },
 
+  // Onboarding
+  onboarding: {
+    welcome: 'DoDo へようこそ！',
+    welcomeSubtitle: 'あなた専用のAIコーチが\n目標達成をサポートします',
+    features: 'こんなことができます',
+    featureRecord: '✅ 毎日の記録をサポート',
+    featureRecordDesc: '活動や気分を簡単に記録',
+    featurePlan: '✅ 週間プランを自動作成',
+    featurePlanDesc: 'あなたに合った計画を提案',
+    featureReminder: '✅ リマインダーで習慣化',
+    featureReminderDesc: '忘れずに続けられる',
+    featureProgress: '✅ 進捗を可視化',
+    featureProgressDesc: '成長が目に見える',
+    howto: '話しかけるだけでOK！',
+    howtoSubtitle: 'ボタンをタップして簡単スタート',
+    selectCoach: '最初のコーチを選ぼう',
+    selectCoachSubtitle: 'あとで変更もできます',
+    skip: 'スキップ',
+    selectLater: 'あとで選ぶ',
+    next: '次へ →',
+    tapToSelect: '👆 タップしてコーチを選択',
+    oneTap: 'ワンタップで操作',
+    record: '記録',
+    progress: '進捗',
+    advice: 'アドバイス',
+    remind: 'リマインド',
+    tipAsk: 'わからなくなったら\n「何ができる？」と聞いてね',
+  },
+
+  // My Slots
+  mySlots: {
+    title: 'マイスロット',
+    subtitle: 'コーチを自由に入れ替えよう',
+    currentPlan: '現在のプラン',
+    changePlan: 'プラン変更 →',
+    slots: 'スロット',
+    todayUsage: '今日の使用回数',
+    additionalSlots: '📦 追加スロット: {{count}}個 (+¥{{price}}/月)',
+    upgradeTitle: '🚀 Proにアップグレード',
+    upgradeDesc: '全15体のエージェントが使い放題！',
+    slotsAvailable: '{{count}}スロット空き',
+    slotsList: 'スロット一覧',
+    addSlot: 'スロットを追加',
+    addSlotPrice: '+¥{{price}}/月',
+    addMessages: '会話回数を追加',
+    addMessagesAmount: '+{{count}}回',
+    addMessagesPrice: '¥{{price}}',
+    additionalPurchases: '📦 追加購入中',
+    slotsAddon: 'スロット +{{count}}個（+¥{{price}}/月）',
+    messagesAddon: '会話回数 +{{count}}回（¥{{price}}）',
+    selectPlan: 'プランを選ぶ',
+    addCoach: 'コーチを追加',
+    tapToSelect: 'タップして選択 →',
+    confirmAddSlot: '1スロットを追加購入しますか？\n\n月額 +¥{{price}}/月',
+    confirmAddMessages: '会話回数を{{count}}回追加しますか？\n\n+¥{{price}}',
+    slotAdded: 'スロットを追加しました！',
+    messagesAdded: '会話回数を{{count}}回追加しました！',
+    alreadyAdded: '{{name}}は既にスロットに追加されています。',
+    coachAdded: '{{name}}を追加しました！',
+  },
+
+  // Market
+  market: {
+    title: 'エージェントマーケット',
+    subtitle: 'AIエージェントを探す',
+    searchPlaceholder: 'エージェントを検索...',
+    agentsFound: '{{count}}件のエージェント',
+    noResults: '該当するエージェントが見つかりません',
+  },
+
+  // Chat additions
+  chatExtras: {
+    coachRequest: '「{{topic}}」のコーチリクエストを受け付けました。今後のアップデートでお届けします！✨',
+    coachRequestPrompt: '「{{topic}}」のコーチがほしいですか？',
+    imageSelectFailed: '画像の選択に失敗しました',
+    addImage: '画像を追加',
+    coachInfo: 'コーチ情報',
+    setReminder: 'リマインダーを設定しよう！',
+    reminderPrompt: 'リマインダーを設定しよう！',
+    setReminderBtn: '設定する',
+  },
+
+  // Agent Profile
+  agentProfile: {
+    addToMyCoaches: 'マイコーチに追加',
+    plan: 'プラン',
+    similarCoaches: '類似コーチ',
+    premiumPlan: 'プレミアムプラン',
+    confirmPremium: '{{name}}のプレミアムプラン（¥{{price}}/月）を購入しますか？',
+  },
+
   // Metrics
   metrics: {
     weightChange: '体重変化',
