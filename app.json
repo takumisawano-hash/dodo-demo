@@ -25,9 +25,12 @@
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#FF9800"
       },
+      "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "package": "com.getdodo.app",
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE"
       ]
@@ -44,6 +47,12 @@
         "projectId": "2c6161e8-ee57-4acc-abf1-292fcb70b115"
       }
     },
-    "owner": "sawataku"
+    "owner": "sawataku",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2c6161e8-ee57-4acc-abf1-292fcb70b115"
+    }
   }
 }

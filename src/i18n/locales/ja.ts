@@ -40,7 +40,7 @@ export const ja = {
   // Home Screen
   home: {
     welcome: '{{greeting}}、{{name}}さん！',
-    logo: '🦤 DoDo',
+    logo: 'DoDo',
     todayProgress: '今日の進捗',
     goalsAchieved: '目標達成',
     consecutiveDays: '連続日数',

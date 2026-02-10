@@ -16,13 +16,31 @@ import { AGENT_IMAGES } from '../data/agentImages';
 
 const { width, height } = Dimensions.get('window');
 
-// 人気エージェント（実際の15体コーチから）
+// 人気エージェント（主要6体）
 const POPULAR_AGENTS = [
   {
     id: 'diet-coach',
     name: 'ドードー',
     description: 'ダイエット・食事管理',
     color: '#FF9800',
+  },
+  {
+    id: 'language-tutor',
+    name: 'ポリー',
+    description: '語学学習',
+    color: '#9C27B0',
+  },
+  {
+    id: 'habit-coach',
+    name: 'オウル',
+    description: '習慣化サポート',
+    color: '#3F51B5',
+  },
+  {
+    id: 'money-coach',
+    name: 'フィンチ',
+    description: 'お金・節約',
+    color: '#4CAF50',
   },
   {
     id: 'sleep-coach',
@@ -51,7 +69,7 @@ const ONBOARDING_DATA: OnboardingSlide[] = [
   {
     id: '1',
     type: 'welcome',
-    title: 'DoDo へようこそ！🦤',
+    title: 'DoDo へようこそ！',
     subtitle: 'あなた専用のAIコーチが\n目標達成をサポートします',
     color: '#FF9800',
     bgColor: '#FFF3E0',
@@ -226,6 +244,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
             <View style={[styles.previewButton, { backgroundColor: isDark ? colors.successLight : '#E8F5E9' }]}>
               <Text style={styles.previewButtonEmoji}>💡</Text>
               <Text style={[styles.previewButtonText, { color: colors.text }]}>アドバイス</Text>
+            </View>
+            <View style={[styles.previewButton, { backgroundColor: isDark ? colors.primaryLight : '#E3F2FD' }]}>
+              <Text style={styles.previewButtonEmoji}>⏰</Text>
+              <Text style={[styles.previewButtonText, { color: colors.text }]}>リマインド</Text>
             </View>
           </View>
         </View>

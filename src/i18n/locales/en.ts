@@ -40,7 +40,7 @@ export const en = {
   // Home Screen
   home: {
     welcome: '{{greeting}}, {{name}}!',
-    logo: '🦤 DoDo',
+    logo: 'DoDo',
     todayProgress: "Today's Progress",
     goalsAchieved: 'Goals',
     consecutiveDays: 'Streak',

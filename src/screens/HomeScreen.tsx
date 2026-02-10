@@ -231,7 +231,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.greeting, dynamicStyles.text]}>
             {t('home.welcome', { greeting: t(greetingKey), name: userName })}
           </Text>
-          <Text style={[styles.logo, dynamicStyles.text]}>{t('home.logo')}</Text>
+          <Text style={[styles.logo, { color: '#FF9800' }]}>{t('home.logo')}</Text>
         </View>
 
         {/* ストリーク表示カード（改善3: 強化版） */}
