@@ -140,6 +140,12 @@ export const ja = {
     },
     features: {
       oneSlot: 'コーチ1枠',
+      fiveSlots: 'コーチ5枠',
+      unlimitedSlots: '無制限',
+      twentyMessages: '1日20メッセージ',
+      hundredMessages: '1日100メッセージ',
+      threeHundredMessages: '1日300メッセージ',
+      // Legacy
       threeSlots: 'コーチ3枠',
       tenSlots: 'コーチ10枠',
       tenMessages: '1日10メッセージ',

@@ -133,6 +133,12 @@ export const en = {
     },
     features: {
       oneSlot: '1 coach slot',
+      fiveSlots: '5 coach slots',
+      unlimitedSlots: 'Unlimited slots',
+      twentyMessages: '20 messages/day',
+      hundredMessages: '100 messages/day',
+      threeHundredMessages: '300 messages/day',
+      // Legacy
       threeSlots: '3 coach slots',
       tenSlots: '10 coach slots',
       tenMessages: '10 messages/day',

@@ -41,10 +41,10 @@ const PLANS: Plan[] = [
     monthlyPrice: 0,
     yearlyPrice: 0,
     slots: 1,
-    dailyLimit: 10,
+    dailyLimit: 20,
     featureKeys: [
       'pricing.features.oneSlot',
-      'pricing.features.tenMessages',
+      'pricing.features.twentyMessages',
     ],
     isTrial: true,
     color: '#78909C',
@@ -55,11 +55,11 @@ const PLANS: Plan[] = [
     nameKey: 'Basic',
     monthlyPrice: 480,
     yearlyPrice: 4608,
-    slots: 3,
-    dailyLimit: 50,
+    slots: 5,
+    dailyLimit: 100,
     featureKeys: [
-      'pricing.features.threeSlots',
-      'pricing.features.fiftyMessages',
+      'pricing.features.fiveSlots',
+      'pricing.features.hundredMessages',
     ],
     isPopular: true,
     color: '#4CAF50',
@@ -70,11 +70,11 @@ const PLANS: Plan[] = [
     nameKey: 'Pro',
     monthlyPrice: 980,
     yearlyPrice: 9408,
-    slots: 10,
-    dailyLimit: 200,
+    slots: 'unlimited',
+    dailyLimit: 300,
     featureKeys: [
-      'pricing.features.tenSlots',
-      'pricing.features.twoHundredMessages',
+      'pricing.features.unlimitedSlots',
+      'pricing.features.threeHundredMessages',
     ],
     isBestValue: true,
     color: '#BA68C8',
@@ -84,8 +84,8 @@ const PLANS: Plan[] = [
 
 // Feature comparison data - シンプル版
 const COMPARISON_FEATURES = [
-  { key: 'slots', label: 'スロット数', values: ['1', '3', '10'] },
-  { key: 'messages', label: '1日のメッセージ', values: ['10', '50', '200'] },
+  { key: 'slots', label: 'スロット数', values: ['1', '5', '無制限'] },
+  { key: 'messages', label: '1日のメッセージ', values: ['20', '100', '300'] },
 ];
 
 interface Props {
