@@ -202,7 +202,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
   const isSubscribed = currentSubscription?.currentPlan && currentSubscription.currentPlan !== 'free';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
