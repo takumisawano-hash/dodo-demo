@@ -479,8 +479,61 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [isPickingImage, setIsPickingImage] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
+
+  // ========================================
+  // 会話履歴の読み込み（初回のみ）
+  // ========================================
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const { getChatHistory } = await import('../services/chatHistory');
+        const history = await getChatHistory(agent.id);
+        if (history.length > 0) {
+          // 履歴があれば復元
+          const restoredMessages: Message[] = history.map(h => ({
+            id: h.id,
+            text: h.content,
+            isUser: h.role === 'user',
+            timestamp: new Date(h.timestamp),
+            imageUri: h.imageUri,
+          }));
+          setMessages(restoredMessages);
+        }
+        setHistoryLoaded(true);
+      } catch (error) {
+        console.warn('Failed to load chat history:', error);
+        setHistoryLoaded(true);
+      }
+    };
+    loadChatHistory();
+  }, [agent.id]);
+
+  // ========================================
+  // 会話履歴の保存（メッセージ変更時）
+  // ========================================
+  useEffect(() => {
+    if (!historyLoaded) return; // 履歴読み込み前は保存しない
+    
+    const saveChatHistoryAsync = async () => {
+      try {
+        const { saveChatHistory, StoredMessage } = await import('../services/chatHistory');
+        const storedMessages = messages.map(m => ({
+          id: m.id,
+          role: m.isUser ? 'user' as const : 'assistant' as const,
+          content: m.text,
+          timestamp: m.timestamp.toISOString(),
+          imageUri: m.imageUri,
+        }));
+        await saveChatHistory(agent.id, storedMessages);
+      } catch (error) {
+        console.warn('Failed to save chat history:', error);
+      }
+    };
+    saveChatHistoryAsync();
+  }, [messages, agent.id, historyLoaded]);
 
   // リマインダー設定の促しチェック（改善4）
   useEffect(() => {
