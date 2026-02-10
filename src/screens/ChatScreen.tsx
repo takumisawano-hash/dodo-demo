@@ -27,6 +27,13 @@ import { useTheme } from '../theme';
 import { getCoachById } from '../data/agentMapping';
 import { saveRequest } from '../services/requests';
 import COACH_PROMPTS from '../data/coachPrompts';
+import { getCurrentUser } from '../services/supabase';
+import {
+  syncChatToSupabase,
+  mergeChatHistory,
+  saveExtractedUserInfo,
+  updateMemorySummaryIfNeeded,
+} from '../services/chatHistorySupabase';
 
 // ----------------------------------------
 // Types
@@ -480,23 +487,44 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
 
   // ========================================
+  // ログイン状態の確認
+  // ========================================
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const user = await getCurrentUser();
+      setIsLoggedIn(!!user);
+    };
+    checkLoginStatus();
+  }, []);
+
+  // ========================================
   // 会話履歴の読み込み（初回のみ）
+  // ログインユーザーはローカル+クラウドをマージ
   // ========================================
   useEffect(() => {
     const loadChatHistory = async () => {
       try {
         const { getChatHistory } = await import('../services/chatHistory');
-        const history = await getChatHistory(agent.id);
+        const localHistory = await getChatHistory(agent.id);
+        
+        // ログインユーザーの場合はクラウドとマージ
+        const user = await getCurrentUser();
+        let history = localHistory;
+        if (user) {
+          history = await mergeChatHistory(agent.id, localHistory);
+        }
+        
         if (history.length > 0) {
           // 履歴があれば復元
           const restoredMessages: Message[] = history.map(h => ({
             id: h.id,
-            text: h.content,
-            isUser: h.role === 'user',
+            role: h.role,
+            content: h.content,
             timestamp: new Date(h.timestamp),
             imageUri: h.imageUri,
           }));

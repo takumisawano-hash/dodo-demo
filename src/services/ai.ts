@@ -10,6 +10,7 @@ import {
   logSecurityEvent,
   getSafeResponse 
 } from './security';
+import { generateUserContext, extractUserInfoFromMessage, updateUserProfile } from './chatSync';
 
 // ----------------------------------------
 // Types
@@ -398,8 +399,31 @@ export async function sendChatMessage(
     });
   }
 
-  // システムプロンプトを取得
-  const systemPrompt = getCoachSystemPrompt(coachId);
+  // ========================================
+  // ユーザー情報の抽出と保存
+  // ========================================
+  try {
+    const extractedInfo = extractUserInfoFromMessage(userMessage);
+    if (Object.keys(extractedInfo).length > 0) {
+      await updateUserProfile(coachId, extractedInfo);
+    }
+  } catch (error) {
+    console.warn('Failed to extract/save user info:', error);
+  }
+
+  // ========================================
+  // システムプロンプト + ユーザーコンテキスト
+  // ========================================
+  let systemPrompt = getCoachSystemPrompt(coachId);
+  
+  try {
+    const userContext = await generateUserContext(coachId);
+    if (userContext) {
+      systemPrompt += userContext;
+    }
+  } catch (error) {
+    console.warn('Failed to get user context:', error);
+  }
 
   // メッセージを構築
   const messages: ChatMessage[] = [

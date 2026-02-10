@@ -830,6 +830,17 @@ export const getCoachSystemPrompt = (coachId: string): string => {
 };
 
 /**
+ * ユーザーコンテキスト付きのシステムプロンプトを取得
+ */
+export const getCoachSystemPromptWithContext = async (
+  coachId: string,
+  userContext: string
+): Promise<string> => {
+  const basePrompt = getCoachSystemPrompt(coachId);
+  return basePrompt + userContext;
+};
+
+/**
  * コーチ情報を取得
  */
 export const getCoachInfo = (coachId: string): CoachPrompt | null => {
