@@ -11,8 +11,8 @@ import { Platform } from 'react-native';
 // RevenueCat Configuration
 // Replace these with your actual API keys from RevenueCat dashboard
 // ============================================
-const REVENUECAT_API_KEY_IOS = 'appl_XXXXXXXXXXXXXXXXXXXXXXXXXX';
-const REVENUECAT_API_KEY_ANDROID = 'goog_XXXXXXXXXXXXXXXXXXXXXXXXXX';
+const REVENUECAT_API_KEY_IOS = 'test_aMNQCUCmgtlpXTMPWfctSONvgRM';
+const REVENUECAT_API_KEY_ANDROID = 'test_aMNQCUCmgtlpXTMPWfctSONvgRM';
 
 // Product IDs (must match App Store Connect / Google Play Console)
 export const PRODUCT_IDS = {

@@ -139,6 +139,13 @@ export const ja = {
       yearlyDiscount: '🎁 年払いで20%お得に！',
     },
     features: {
+      oneSlot: 'コーチ1枠',
+      threeSlots: 'コーチ3枠',
+      tenSlots: 'コーチ10枠',
+      tenMessages: '1日10メッセージ',
+      fiftyMessages: '1日50メッセージ',
+      twoHundredMessages: '1日200メッセージ',
+      // Legacy keys
       oneAgent: '1体のエージェントを利用',
       threeAgents: '3体のエージェントを利用',
       allAgents: '全エージェントを利用',

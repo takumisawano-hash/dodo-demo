@@ -132,6 +132,13 @@ export const en = {
       yearlyDiscount: '🎁 Save 20% with yearly!',
     },
     features: {
+      oneSlot: '1 coach slot',
+      threeSlots: '3 coach slots',
+      tenSlots: '10 coach slots',
+      tenMessages: '10 messages/day',
+      fiftyMessages: '50 messages/day',
+      twoHundredMessages: '200 messages/day',
+      // Legacy keys
       oneAgent: 'Use 1 agent',
       threeAgents: 'Use 3 agents',
       allAgents: 'Use all agents',

@@ -36,66 +36,45 @@ interface Plan {
 
 const PLANS: Plan[] = [
   {
-    id: 'trial',
-    nameKey: 'Free Trial',
+    id: 'free',
+    nameKey: 'Free',
     monthlyPrice: 0,
     yearlyPrice: 0,
     slots: 1,
-    dailyLimit: 20,
+    dailyLimit: 10,
     featureKeys: [
-      'pricing.features.oneAgent',
-      'pricing.features.basicChat',
-      'pricing.features.trialAllFeatures',
+      'pricing.features.oneSlot',
+      'pricing.features.tenMessages',
     ],
     isTrial: true,
     color: '#78909C',
     icon: '🆓',
   },
   {
-    id: 'starter',
-    nameKey: 'Starter',
+    id: 'basic',
+    nameKey: 'Basic',
     monthlyPrice: 480,
     yearlyPrice: 4608,
-    slots: 1,
+    slots: 3,
     dailyLimit: 50,
     featureKeys: [
-      'pricing.features.oneAgent',
-      'pricing.features.progressDashboard',
-      'pricing.features.customReminders',
+      'pricing.features.threeSlots',
+      'pricing.features.fiftyMessages',
     ],
+    isPopular: true,
     color: '#4CAF50',
     icon: '🌱',
   },
   {
-    id: 'basic',
-    nameKey: 'Basic',
-    monthlyPrice: 980,
-    yearlyPrice: 9408,
-    slots: 3,
-    dailyLimit: 100,
-    featureKeys: [
-      'pricing.features.threeAgents',
-      'pricing.features.progressDashboard',
-      'pricing.features.customReminders',
-      'pricing.features.dataExport',
-    ],
-    isPopular: true,
-    color: '#FF9800',
-    icon: '⭐',
-  },
-  {
     id: 'pro',
     nameKey: 'Pro',
-    monthlyPrice: 1980,
-    yearlyPrice: 19008,
-    slots: 'unlimited',
+    monthlyPrice: 980,
+    yearlyPrice: 9408,
+    slots: 10,
     dailyLimit: 200,
     featureKeys: [
-      'pricing.features.allAgents',
-      'pricing.features.advancedAnalytics',
-      'pricing.features.prioritySupport',
-      'pricing.features.dataExport',
-      'pricing.features.apiAccess',
+      'pricing.features.tenSlots',
+      'pricing.features.twoHundredMessages',
     ],
     isBestValue: true,
     color: '#BA68C8',
@@ -103,15 +82,10 @@ const PLANS: Plan[] = [
   },
 ];
 
-// Feature comparison data
+// Feature comparison data - シンプル版
 const COMPARISON_FEATURES = [
-  { key: 'agents', label: 'エージェント数', values: ['1', '1', '3', '無制限'] },
-  { key: 'messages', label: '1日のメッセージ', values: ['20', '50', '100', '200'] },
-  { key: 'dashboard', label: '進捗ダッシュボード', values: ['✕', '○', '○', '○'] },
-  { key: 'reminders', label: 'カスタムリマインダー', values: ['✕', '○', '○', '○'] },
-  { key: 'export', label: 'データエクスポート', values: ['✕', '✕', '○', '○'] },
-  { key: 'analytics', label: '詳細分析', values: ['✕', '✕', '✕', '○'] },
-  { key: 'support', label: 'サポート', values: ['基本', '基本', 'メール', '優先'] },
+  { key: 'slots', label: 'スロット数', values: ['1', '3', '10'] },
+  { key: 'messages', label: '1日のメッセージ', values: ['10', '50', '200'] },
 ];
 
 interface Props {
