@@ -162,15 +162,15 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 8,
-    paddingBottom: 8,
-    height: 65,
+    borderTopColor: '#E0E0E0',
+    paddingTop: 10,
+    paddingBottom: 20,
+    height: 80,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 12,
   },
   tabLabel: {
     fontSize: 11,
@@ -188,11 +188,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF3E0',
   },
   iconEmoji: {
-    fontSize: 20,
+    fontSize: 24,
     opacity: 0.6,
   },
   iconEmojiFocused: {
-    fontSize: 22,
+    fontSize: 26,
     opacity: 1,
   },
 });
