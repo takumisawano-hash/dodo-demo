@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -104,11 +105,17 @@ function SettingsStackScreen() {
 }
 
 export default function TabNavigator() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+          ...styles.tabBar,
+          paddingBottom: Math.max(insets.bottom, 20),
+          height: 70 + Math.max(insets.bottom, 20),
+        },
         tabBarActiveTintColor: '#FF9800',
         tabBarInactiveTintColor: '#999',
         tabBarLabelStyle: styles.tabLabel,

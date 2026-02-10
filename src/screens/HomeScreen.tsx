@@ -315,7 +315,7 @@ export default function HomeScreen({ navigation }: Props) {
         {/* 空スロット誘導カード（改善5） */}
         {subscribedAgents.length < 3 && (
           <AddCoachCard 
-            onPress={() => navigation.navigate('MySlots')}
+            onPress={() => navigation.navigate('MySlotsTab')}
             emptyCount={3 - subscribedAgents.length}
             colors={colors}
             isDark={isDark}
