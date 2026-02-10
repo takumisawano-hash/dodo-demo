@@ -541,27 +541,37 @@ export default function ChatScreen({ route, navigation }: Props) {
 
   // ========================================
   // 会話履歴の保存（メッセージ変更時）
+  // ログインユーザーはSupabaseにも同期
   // ========================================
   useEffect(() => {
     if (!historyLoaded) return; // 履歴読み込み前は保存しない
     
     const saveChatHistoryAsync = async () => {
       try {
-        const { saveChatHistory, StoredMessage } = await import('../services/chatHistory');
+        const { saveChatHistory } = await import('../services/chatHistory');
         const storedMessages = messages.map(m => ({
           id: m.id,
-          role: m.isUser ? 'user' as const : 'assistant' as const,
-          content: m.text,
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
           timestamp: m.timestamp.toISOString(),
           imageUri: m.imageUri,
         }));
+        
+        // ローカルに保存
         await saveChatHistory(agent.id, storedMessages);
+        
+        // ログインユーザーの場合はSupabaseにも同期
+        if (isLoggedIn) {
+          await syncChatToSupabase(agent.id, storedMessages);
+          // 定期的に記憶要約を更新
+          await updateMemorySummaryIfNeeded(agent.id, storedMessages);
+        }
       } catch (error) {
         console.warn('Failed to save chat history:', error);
       }
     };
     saveChatHistoryAsync();
-  }, [messages, agent.id, historyLoaded]);
+  }, [messages, agent.id, historyLoaded, isLoggedIn]);
 
   // リマインダー設定の促しチェック（改善4）
   useEffect(() => {
@@ -589,7 +599,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     }
     setShowReminderModal(false);
     if (setReminder) {
-      navigation.navigate('Settings', { openReminders: true });
+      navigation.navigate('Reminders');
     }
   };
 
@@ -696,6 +706,11 @@ export default function ChatScreen({ route, navigation }: Props) {
       const imageToSend = selectedImage;
       setSelectedImage(null);
       setIsLoading(true);
+
+      // ログインユーザーの場合、メッセージからユーザー情報を抽出・保存
+      if (isLoggedIn && messageText) {
+        saveExtractedUserInfo(agent.id, messageText).catch(console.warn);
+      }
 
       // 既読マークを更新
       setTimeout(() => {
@@ -857,7 +872,7 @@ export default function ChatScreen({ route, navigation }: Props) {
         setIsLoading(false);
       }
     },
-    [inputText, isLoading, agent, getConversationHistory, selectedImage]
+    [inputText, isLoading, agent, getConversationHistory, selectedImage, isLoggedIn]
   );
 
   const handleLongPress = (message: Message) => {
@@ -983,7 +998,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const agentName = t(`agents.${agent.id}.name`);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       {/* ヘッダー */}
       <View style={[styles.header, { backgroundColor: agent.color }]}>
         <TouchableOpacity
@@ -1081,8 +1096,9 @@ export default function ChatScreen({ route, navigation }: Props) {
 
       {/* 入力エリア */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
+        style={{ width: '100%' }}
       >
         {/* 選択された画像のプレビュー */}
         {selectedImage && (

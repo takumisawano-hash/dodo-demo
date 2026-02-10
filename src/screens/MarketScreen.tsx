@@ -178,7 +178,7 @@ export default function MarketScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.logo, { color: colors.text }]}>🏪 マーケット</Text>

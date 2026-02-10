@@ -60,12 +60,17 @@ export default function AppNavigator() {
   };
 
   // オンボーディング完了後、エージェントが選択されていたらチャット画面に遷移
+  // ※一時的に無効化：まずホーム画面を表示してからチャットに行くようにする
   useEffect(() => {
     if (!showOnboarding && initialAgent && navigationRef.current) {
-      // 少し遅延させてナビゲーションの準備を待つ
+      // ホーム画面を経由してからチャットに遷移（タブバーを表示するため）
       setTimeout(() => {
-        navigationRef.current?.navigate('Chat', { agent: initialAgent, isFirstChat: true });
-        setInitialAgent(null); // 使用後はクリア
+        navigationRef.current?.navigate('Main');
+        // さらに少し待ってからチャット画面に遷移
+        setTimeout(() => {
+          navigationRef.current?.navigate('Chat', { agent: initialAgent, isFirstChat: true });
+          setInitialAgent(null);
+        }, 300);
       }, 100);
     }
   }, [showOnboarding, initialAgent]);

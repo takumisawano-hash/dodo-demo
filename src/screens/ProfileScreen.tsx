@@ -157,7 +157,7 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>プロフィール</Text>
         <TouchableOpacity style={styles.shareButton} onPress={handleShareProfile}>

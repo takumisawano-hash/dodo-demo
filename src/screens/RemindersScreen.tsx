@@ -546,7 +546,7 @@ export default function RemindersScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       {/* ヘッダー */}
       <View style={[styles.header, { borderBottomColor: isDark ? '#333' : '#F0F0F0' }]}>
         <TouchableOpacity

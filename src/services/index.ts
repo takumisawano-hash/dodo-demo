@@ -53,6 +53,42 @@ export {
   type SignInData,
 } from './supabase';
 
+// Chat History (Local + Supabase Sync)
+export {
+  saveChatHistory,
+  getChatHistory,
+  clearChatHistory,
+  getAllChatHistories,
+  saveUserCoachProfile,
+  getUserCoachProfile,
+  updateUserCoachProfile,
+  updateMemorySummary,
+  generateContextForPrompt,
+  generateMessageId,
+  trimChatHistory,
+  type StoredMessage,
+  type ChatSession,
+  type UserCoachProfile,
+} from './chatHistory';
+
+export {
+  syncChatToSupabase,
+  getChatFromSupabase,
+  mergeChatHistory,
+  getSupabaseUserProfile,
+  saveSupabaseUserProfile,
+  extractUserInfo,
+  saveExtractedUserInfo,
+  generateMemorySummary as generateCloudMemorySummary,
+  updateMemorySummaryIfNeeded,
+  getContextForPrompt,
+  clearSupabaseChatHistory,
+  deleteAllUserData,
+  type SupabaseChatMessage,
+  type SupabaseUserProfile,
+  type UserInfo,
+} from './chatHistorySupabase';
+
 // Database CRUD
 export {
   // User Profiles

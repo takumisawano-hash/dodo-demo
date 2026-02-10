@@ -287,7 +287,7 @@ export default function SettingsScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={["top"]}>
       <View style={styles.header}>
         <Text style={[styles.title, dynamicStyles.text]}>{t('settings.title')}</Text>
         <Text style={[styles.headerSubtitle, dynamicStyles.textSecondary]}>アプリの設定をカスタマイズ</Text>

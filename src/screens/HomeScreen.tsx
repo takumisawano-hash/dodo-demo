@@ -213,7 +213,7 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, dynamicStyles.container]}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={['top']}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent} 
