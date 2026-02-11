@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android AAB
 
 on:
   workflow_dispatch:
@@ -26,16 +26,16 @@ jobs:
       - name: Prebuild Android
         run: npx expo prebuild --platform android --clean
         
-      - name: Build Release APK
+      - name: Build Release AAB (App Bundle)
         run: |
           cd android
           echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
-          ./gradlew assembleRelease --no-daemon --max-workers=2
+          ./gradlew bundleRelease --no-daemon --max-workers=2
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
           
-      - name: Upload APK
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: dodo-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          name: dodo-release-aab
+          path: android/app/build/outputs/bundle/release/*.aab
