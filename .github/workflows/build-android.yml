@@ -72,24 +72,11 @@ jobs:
           base64 android/app/dodo-release.keystore > keystore-backup.txt
           echo "⚠️ IMPORTANT: Save this keystore! You'll need it for future updates."
           
-      - name: Build Release APK (for testing)
-        run: |
-          cd android
-          ./gradlew assembleRelease --no-daemon --max-workers=2
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
-
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: dodo-release-aab
           path: android/app/build/outputs/bundle/release/*.aab
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: dodo-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
           
       - name: Upload Keystore Backup
         uses: actions/upload-artifact@v4
