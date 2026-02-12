@@ -25,17 +25,61 @@ jobs:
         
       - name: Prebuild Android
         run: npx expo prebuild --platform android --clean
+
+      - name: Create Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/dodo-release.keystore
+        continue-on-error: true
+        
+      - name: Create Keystore (if no secret)
+        run: |
+          if [ ! -f android/app/dodo-release.keystore ]; then
+            keytool -genkeypair -v -storetype PKCS12 \
+              -keystore android/app/dodo-release.keystore \
+              -alias dodo \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass dodo123456 \
+              -keypass dodo123456 \
+              -dname "CN=DoDo, OU=DoDo, O=DoDo, L=Tokyo, ST=Tokyo, C=JP"
+          fi
+          
+      - name: Configure signing
+        run: |
+          cat >> android/gradle.properties << EOF
+          MYAPP_UPLOAD_STORE_FILE=dodo-release.keystore
+          MYAPP_UPLOAD_KEY_ALIAS=dodo
+          MYAPP_UPLOAD_STORE_PASSWORD=dodo123456
+          MYAPP_UPLOAD_KEY_PASSWORD=dodo123456
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+          EOF
+          
+      - name: Update build.gradle for signing
+        run: |
+          sed -i 's/signingConfigs {/signingConfigs {\n        release {\n            storeFile file(MYAPP_UPLOAD_STORE_FILE)\n            storePassword MYAPP_UPLOAD_STORE_PASSWORD\n            keyAlias MYAPP_UPLOAD_KEY_ALIAS\n            keyPassword MYAPP_UPLOAD_KEY_PASSWORD\n        }/' android/app/build.gradle
+          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' android/app/build.gradle
         
       - name: Build Release AAB (App Bundle)
         run: |
           cd android
-          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
           ./gradlew bundleRelease --no-daemon --max-workers=2
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+
+      - name: Export Keystore for backup
+        run: |
+          base64 android/app/dodo-release.keystore > keystore-backup.txt
+          echo "⚠️ IMPORTANT: Save this keystore! You'll need it for future updates."
           
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: dodo-release-aab
           path: android/app/build/outputs/bundle/release/*.aab
+          
+      - name: Upload Keystore Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: keystore-backup
+          path: keystore-backup.txt
