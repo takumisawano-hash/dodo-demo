@@ -15,6 +15,9 @@ const ONBOARDING_KEY = '@dodo_onboarding_complete';
 // エージェントIDからエージェント情報を取得するマップ
 const AGENT_MAP: Record<string, { id: string; name: string; role: string; color: string; emoji: string; description: string; killerFeature: string; isSubscribed: boolean }> = {
   'diet-coach': { id: 'diet-coach', name: 'ドードー', role: 'ダイエット', color: '#FF9800', emoji: '🦤', description: '無理なく続く食事管理', killerFeature: '週間食事プラン', isSubscribed: false },
+  'language-tutor': { id: 'language-tutor', name: 'ポリー', role: '語学', color: '#9C27B0', emoji: '🦜', description: '楽しく英語学習', killerFeature: '会話練習', isSubscribed: false },
+  'habit-coach': { id: 'habit-coach', name: 'オウル', role: '習慣化', color: '#3F51B5', emoji: '🦉', description: '良い習慣を身につける', killerFeature: '習慣トラッカー', isSubscribed: false },
+  'money-coach': { id: 'money-coach', name: 'フィンチ', role: 'お金', color: '#4CAF50', emoji: '💰', description: '賢くお金を管理', killerFeature: '支出分析', isSubscribed: false },
   'sleep-coach': { id: 'sleep-coach', name: 'コアラ', role: '睡眠', color: '#90A4AE', emoji: '🐨', description: 'ぐっすり眠れる', killerFeature: '睡眠スコア', isSubscribed: false },
   'mental-coach': { id: 'mental-coach', name: 'スワン', role: 'メンタル', color: '#F48FB1', emoji: '🦢', description: '心の健康ケア', killerFeature: '気分トラッカー', isSubscribed: false },
 };
