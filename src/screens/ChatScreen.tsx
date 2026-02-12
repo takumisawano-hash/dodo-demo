@@ -48,6 +48,7 @@ interface Message {
   isStreaming?: boolean;
   recommendedCoachId?: string | null;
   requestTopic?: string | null;
+  suggestedReplies?: string[];
 }
 
 interface SyncDestination {
@@ -123,18 +124,50 @@ interface ParsedAIResponse {
   text: string;
   recommendedCoachId: string | null;
   requestTopic: string | null;
+  suggestedReplies: string[];
 }
 
 function parseAIResponse(response: string): ParsedAIResponse {
   const recommendMatch = response.match(/\[RECOMMEND:([^\]]+)\]/);
   const requestMatch = response.match(/\[REQUEST:([^\]]+)\]/);
-  const cleanResponse = response
+  
+  // 返信候補を抽出（①②③ または 1. 2. 3. の形式）
+  const suggestedReplies: string[] = [];
+  const circledNumberPattern = /[①②③][\s　]*([^\n①②③]+)/g;
+  const numberedPattern = /(?:^|\n)\s*(\d+)[.．)）]\s*([^\n]+)/g;
+  
+  let match;
+  // ①②③形式を検索
+  while ((match = circledNumberPattern.exec(response)) !== null) {
+    const reply = match[1].trim();
+    if (reply.length > 0 && reply.length < 50) {
+      suggestedReplies.push(reply);
+    }
+  }
+  
+  // 数字形式（1. 2. 3.）も検索（①②③が見つからなかった場合）
+  if (suggestedReplies.length === 0) {
+    while ((match = numberedPattern.exec(response)) !== null) {
+      const reply = match[2].trim();
+      if (reply.length > 0 && reply.length < 50) {
+        suggestedReplies.push(reply);
+      }
+    }
+  }
+  
+  // 最大3つまで
+  const finalSuggestions = suggestedReplies.slice(0, 3);
+  
+  // クリーンなテキストを作成（タグを削除）
+  let cleanResponse = response
     .replace(/\[RECOMMEND:[^\]]+\]/g, '')
     .replace(/\[REQUEST:[^\]]+\]/g, '');
+  
   return {
     text: cleanResponse.trim(),
     recommendedCoachId: recommendMatch?.[1] || null,
     requestTopic: requestMatch?.[1] || null,
+    suggestedReplies: finalSuggestions,
   };
 }
 
@@ -767,6 +800,7 @@ export default function ChatScreen({ route, navigation }: Props) {
                             syncNotification,
                             recommendedCoachId: parsed.recommendedCoachId,
                             requestTopic: parsed.requestTopic,
+                            suggestedReplies: parsed.suggestedReplies,
                           }
                         : m
                     )
@@ -830,6 +864,7 @@ export default function ChatScreen({ route, navigation }: Props) {
                           syncNotification,
                           recommendedCoachId: parsed.recommendedCoachId,
                           requestTopic: parsed.requestTopic,
+                          suggestedReplies: parsed.suggestedReplies,
                         }
                       : m
                   )
@@ -989,6 +1024,27 @@ export default function ChatScreen({ route, navigation }: Props) {
             fromCoachId={agent.id}
             colors={colors}
           />
+        )}
+
+        {/* 返信候補ボタン */}
+        {!isUser && item.suggestedReplies && item.suggestedReplies.length > 0 && !item.isStreaming && index === messages.length - 1 && (
+          <View style={styles.suggestedRepliesContainer}>
+            {item.suggestedReplies.map((reply, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.suggestedReplyButton, { borderColor: agent.color }]}
+                onPress={() => {
+                  setInputText(reply);
+                  handleSend(reply);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.suggestedReplyText, { color: agent.color }]}>
+                  {reply}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </View>
     );
@@ -1710,5 +1766,26 @@ const styles = StyleSheet.create({
   reminderModalButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+
+  // 返信候補ボタン
+  suggestedRepliesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginLeft: 52,
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  suggestedReplyButton: {
+    borderWidth: 1.5,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  suggestedReplyText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

@@ -266,49 +266,53 @@ export default function OnboardingScreen({ onComplete }: Props) {
   // ステップ4: エージェント選択
   const renderSelectAgent = (item: OnboardingSlide) => (
     <View style={[styles.slide, { backgroundColor: isDark ? colors.background : item.bgColor }]}>
-      <View style={styles.content}>
+      <View style={styles.selectAgentHeader}>
         <Image 
           source={{ uri: AGENT_IMAGES['diet-coach'] }} 
           style={styles.selectHeaderImage}
         />
         <Text style={[styles.title, { color: item.color }]}>{t(item.title)}</Text>
         <Text style={[styles.selectSubtitle, { color: colors.textSecondary }]}>{item.subtitle ? t(item.subtitle) : ''}</Text>
-        
-        <View style={styles.agentsContainer}>
-          {POPULAR_AGENTS.map((agent) => (
-            <TouchableOpacity
-              key={agent.id}
-              style={[
-                styles.agentCard,
-                { backgroundColor: colors.card },
-                selectedAgent === agent.id && styles.agentCardSelected,
-                selectedAgent === agent.id && { borderColor: agent.color },
-              ]}
-              onPress={() => handleAgentSelectAndComplete(agent.id)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.agentAvatarContainer, { backgroundColor: agent.color + '20' }]}>
-                <Image 
-                  source={{ uri: AGENT_IMAGES[agent.id] }} 
-                  style={styles.agentCardImage}
-                />
-              </View>
-              <Text style={[styles.agentName, { color: colors.text }]}>{agent.name}</Text>
-              <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{agent.description}</Text>
-              {selectedAgent === agent.id && (
-                <View style={[styles.selectedBadge, { backgroundColor: agent.color }]}>
-                  <Text style={styles.selectedBadgeText}>✓</Text>
-                </View>
-              )}
-              {selectedAgent === agent.id && (
-                <View style={styles.selectedOverlay}>
-                  <Text style={styles.selectedOverlayText}>選択中...</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
       </View>
+      
+      <ScrollView 
+        style={styles.agentsScrollView}
+        contentContainerStyle={styles.agentsContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {POPULAR_AGENTS.map((agent) => (
+          <TouchableOpacity
+            key={agent.id}
+            style={[
+              styles.agentCard,
+              { backgroundColor: colors.card },
+              selectedAgent === agent.id && styles.agentCardSelected,
+              selectedAgent === agent.id && { borderColor: agent.color },
+            ]}
+            onPress={() => handleAgentSelectAndComplete(agent.id)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.agentAvatarContainer, { backgroundColor: agent.color + '20' }]}>
+              <Image 
+                source={{ uri: AGENT_IMAGES[agent.id] }} 
+                style={styles.agentCardImage}
+              />
+            </View>
+            <Text style={[styles.agentName, { color: colors.text }]}>{agent.name}</Text>
+            <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{agent.description}</Text>
+            {selectedAgent === agent.id && (
+              <View style={[styles.selectedBadge, { backgroundColor: agent.color }]}>
+                <Text style={styles.selectedBadgeText}>✓</Text>
+              </View>
+            )}
+            {selectedAgent === agent.id && (
+              <View style={styles.selectedOverlay}>
+                <Text style={styles.selectedOverlayText}>選択中...</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -565,13 +569,14 @@ const styles = StyleSheet.create({
   previewButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   previewButton: {
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 16,
-    width: 80,
+    padding: 10,
+    borderRadius: 14,
+    width: 72,
   },
   previewButtonEmoji: {
     fontSize: 24,
@@ -602,33 +607,43 @@ const styles = StyleSheet.create({
   },
   
   // ステップ4: エージェント選択
+  selectAgentHeader: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
   selectHeaderImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    marginBottom: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 8,
   },
   selectSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#888',
-    marginBottom: 24,
+    marginBottom: 12,
+  },
+  agentsScrollView: {
+    flex: 1,
+    width: '100%',
   },
   agentsContainer: {
-    width: '100%',
-    gap: 12,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    gap: 10,
   },
   agentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 20,
+    padding: 12,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 10,
+    shadowRadius: 8,
     elevation: 3,
   },
   agentCardSelected: {
@@ -701,9 +716,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
-    paddingTop: 10,
-    minHeight: 90,
+    paddingBottom: 24,
+    paddingTop: 8,
+    minHeight: 80,
   },
   nextButton: {
     paddingVertical: 16,
