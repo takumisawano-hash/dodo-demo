@@ -1,4 +1,4 @@
-name: Build Android AAB
+name: Build Android
 
 on:
   workflow_dispatch:
@@ -28,55 +28,76 @@ jobs:
 
       - name: Create Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/dodo-release.keystore
-        continue-on-error: true
-        
-      - name: Create Keystore (if no secret)
-        run: |
-          if [ ! -f android/app/dodo-release.keystore ]; then
-            keytool -genkeypair -v -storetype PKCS12 \
-              -keystore android/app/dodo-release.keystore \
-              -alias dodo \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass dodo123456 \
-              -keypass dodo123456 \
-              -dname "CN=DoDo, OU=DoDo, O=DoDo, L=Tokyo, ST=Tokyo, C=JP"
-          fi
+          cd android/app
+          keytool -genkeypair -v -storetype PKCS12 \
+            -keystore release.keystore \
+            -alias release \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android \
+            -keypass android \
+            -dname "CN=DoDo, OU=DoDo, O=DoDo, L=Tokyo, ST=Tokyo, C=JP"
           
-      - name: Configure signing
+      - name: Configure signing in build.gradle
         run: |
-          cat >> android/gradle.properties << EOF
-          MYAPP_UPLOAD_STORE_FILE=dodo-release.keystore
-          MYAPP_UPLOAD_KEY_ALIAS=dodo
-          MYAPP_UPLOAD_STORE_PASSWORD=dodo123456
-          MYAPP_UPLOAD_KEY_PASSWORD=dodo123456
-          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
-          EOF
+          cd android/app
           
-      - name: Update build.gradle for signing
+          # Add signing config to build.gradle
+          cat > signing.gradle << 'SIGNEOF'
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file('release.keystore')
+                      storePassword 'android'
+                      keyAlias 'release'
+                      keyPassword 'android'
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          SIGNEOF
+          
+          # Apply signing config
+          echo "apply from: 'signing.gradle'" >> build.gradle
+          
+      - name: Set Gradle memory
         run: |
-          sed -i 's/signingConfigs {/signingConfigs {\n        release {\n            storeFile file(MYAPP_UPLOAD_STORE_FILE)\n            storePassword MYAPP_UPLOAD_STORE_PASSWORD\n            keyAlias MYAPP_UPLOAD_KEY_ALIAS\n            keyPassword MYAPP_UPLOAD_KEY_PASSWORD\n        }/' android/app/build.gradle
-          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' android/app/build.gradle
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> android/gradle.properties
         
-      - name: Build Release AAB (App Bundle)
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon --max-workers=2
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+
+      - name: Build Release AAB
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon --max-workers=2
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
-
-      - name: Export Keystore for backup
-        run: |
-          base64 android/app/dodo-release.keystore > keystore-backup.txt
-          echo "⚠️ IMPORTANT: Save this keystore! You'll need it for future updates."
           
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dodo-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: dodo-release-aab
           path: android/app/build/outputs/bundle/release/*.aab
+          
+      - name: Backup Keystore
+        run: |
+          base64 android/app/release.keystore > keystore-backup.txt
           
       - name: Upload Keystore Backup
         uses: actions/upload-artifact@v4
