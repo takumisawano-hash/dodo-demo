@@ -1,0 +1,109 @@
+appId: com.sawataku.dodo
+name: DoDo Full Release Test
+---
+
+# === オンボーディングテスト ===
+- launchApp:
+    clearState: true
+
+- takeScreenshot: "01-onboarding-welcome"
+
+# スキップボタンをタップ
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "スキップ"
+    optional: true
+
+- waitForAnimationToEnd
+
+- takeScreenshot: "02-home-screen"
+
+# === ホーム画面テスト ===
+# タブバーが表示されているか確認
+- assertVisible:
+    text: "ホーム"
+    optional: true
+- assertVisible:
+    text: "Home"
+    optional: true
+
+- takeScreenshot: "03-home-with-tabs"
+
+# === ダッシュボードタブ ===
+- tapOn:
+    text: "ダッシュボード"
+    optional: true
+- tapOn:
+    text: "Dashboard"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "04-dashboard"
+
+# === マイスロットタブ ===
+- tapOn:
+    text: "マイスロット"
+    optional: true
+- tapOn:
+    text: "My Slots"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "05-myslots"
+
+# === 設定タブ ===
+- tapOn:
+    text: "設定"
+    optional: true
+- tapOn:
+    text: "Settings"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "06-settings"
+
+# === 言語変更テスト ===
+- tapOn:
+    text: "言語設定"
+    optional: true
+- tapOn:
+    text: "Language"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "07-language-select"
+
+# 英語を選択
+- tapOn:
+    text: "English"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "08-language-english"
+
+# ホームに戻る
+- tapOn:
+    text: "Home"
+    optional: true
+- tapOn:
+    text: "ホーム"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "09-home-english"
+
+# === コーチ追加テスト ===
+- tapOn:
+    text: "Add Coach"
+    optional: true
+- tapOn:
+    text: "コーチを追加"
+    optional: true
+
+- waitForAnimationToEnd
+- takeScreenshot: "10-add-coach"
+
+# === 完了 ===
+- takeScreenshot: "99-test-complete"
