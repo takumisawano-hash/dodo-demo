@@ -40,7 +40,7 @@ class NotificationService {
     try {
       // Check if physical device (required for push notifications)
       if (!Device.isDevice) {
-        console.log('Push notifications require a physical device');
+        if (__DEV__) console.log('Push notifications require a physical device');
         return false;
       }
 
@@ -54,7 +54,7 @@ class NotificationService {
       }
 
       if (finalStatus !== 'granted') {
-        console.log('Notification permission not granted');
+        if (__DEV__) console.log('Notification permission not granted');
         return false;
       }
 
@@ -64,9 +64,9 @@ class NotificationService {
           projectId: 'dodo-app', // Replace with actual project ID
         });
         this.expoPushToken = tokenData.data;
-        console.log('Push token:', this.expoPushToken);
+        if (__DEV__) console.log('Push token:', this.expoPushToken);
       } catch (e) {
-        console.log('Could not get push token:', e);
+        if (__DEV__) console.log('Could not get push token:', e);
       }
 
       // Android specific channel setup

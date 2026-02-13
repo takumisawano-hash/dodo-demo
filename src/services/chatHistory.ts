@@ -105,7 +105,7 @@ export const getAllChatHistories = async (): Promise<Record<string, ChatSession>
     const keys = await AsyncStorage.getAllKeys();
     const chatKeys = keys.filter(k => k.startsWith(CHAT_HISTORY_PREFIX));
     const results: Record<string, ChatSession> = {};
-    
+
     for (const key of chatKeys) {
       const data = await AsyncStorage.getItem(key);
       if (data) {
@@ -117,6 +117,23 @@ export const getAllChatHistories = async (): Promise<Record<string, ChatSession>
   } catch (error) {
     console.warn('Failed to get all chat histories:', error);
     return {};
+  }
+};
+
+/**
+ * 全コーチの会話履歴を削除
+ */
+export const clearAllChatHistories = async (): Promise<void> => {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const chatKeys = keys.filter(k => k.startsWith(CHAT_HISTORY_PREFIX));
+    const profileKeys = keys.filter(k => k.startsWith(USER_PROFILE_PREFIX));
+
+    // 会話履歴とユーザープロフィールを全て削除
+    await AsyncStorage.multiRemove([...chatKeys, ...profileKeys]);
+  } catch (error) {
+    console.warn('Failed to clear all chat histories:', error);
+    throw error;
   }
 };
 

@@ -84,7 +84,9 @@ function selectAnthropicModel(
     /plan|analyze|explain|how.*should|why|detail/i.test(userMessage);
   
   const selectedModel = isComplex ? CLAUDE_MODELS.SONNET : CLAUDE_MODELS.HAIKU;
-  console.log(`[AI] Model selected: ${selectedModel} (complex: ${isComplex}, msgLen: ${messageLength}, history: ${historyLength})`);
+  if (__DEV__) {
+    console.log(`[AI] Model selected: ${selectedModel} (complex: ${isComplex}, msgLen: ${messageLength}, history: ${historyLength})`);
+  }
   
   return selectedModel;
 }

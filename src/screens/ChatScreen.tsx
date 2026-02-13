@@ -523,6 +523,16 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
+  const readTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // クリーンアップ: アンマウント時にタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (readTimeoutRef.current) {
+        clearTimeout(readTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // ========================================
   // ログイン状態の確認
@@ -746,7 +756,7 @@ export default function ChatScreen({ route, navigation }: Props) {
       }
 
       // 既読マークを更新
-      setTimeout(() => {
+      readTimeoutRef.current = setTimeout(() => {
         setMessages((prev) =>
           prev.map((m) => (m.id === userMessage.id ? { ...m, isRead: true } : m))
         );

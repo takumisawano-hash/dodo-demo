@@ -9,10 +9,11 @@ import { Platform } from 'react-native';
 
 // ============================================
 // RevenueCat Configuration
-// Replace these with your actual API keys from RevenueCat dashboard
+// API keys are loaded from environment variables
+// Set EXPO_PUBLIC_REVENUECAT_API_KEY_IOS and EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID
 // ============================================
-const REVENUECAT_API_KEY_IOS = 'test_aMNQCUCmgtlpXTMPWfctSONvgRM';
-const REVENUECAT_API_KEY_ANDROID = 'test_aMNQCUCmgtlpXTMPWfctSONvgRM';
+const REVENUECAT_API_KEY_IOS = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || '';
+const REVENUECAT_API_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || '';
 
 // Product IDs (must match App Store Connect / Google Play Console)
 export const PRODUCT_IDS = {
@@ -64,15 +65,26 @@ class PurchaseService {
     if (this.initialized) return;
 
     try {
-      const apiKey = Platform.OS === 'ios' 
-        ? REVENUECAT_API_KEY_IOS 
+      const apiKey = Platform.OS === 'ios'
+        ? REVENUECAT_API_KEY_IOS
         : REVENUECAT_API_KEY_ANDROID;
+
+      if (!apiKey) {
+        if (__DEV__) {
+          console.warn('RevenueCat API key not configured. Set EXPO_PUBLIC_REVENUECAT_API_KEY_IOS/ANDROID');
+        }
+        return;
+      }
 
       await Purchases.configure({ apiKey });
       this.initialized = true;
-      console.log('RevenueCat initialized');
+      if (__DEV__) {
+        console.log('RevenueCat initialized');
+      }
     } catch (error) {
-      console.error('Failed to initialize RevenueCat:', error);
+      if (__DEV__) {
+        console.error('Failed to initialize RevenueCat:', error);
+      }
     }
   }
 

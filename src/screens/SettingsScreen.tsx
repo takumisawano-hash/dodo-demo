@@ -10,13 +10,18 @@ import {
   Linking,
   ActivityIndicator,
   Animated,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as StoreReview from 'expo-store-review';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { t, useI18n, formatDate } from '../i18n';
 import { useTheme, ThemeMode } from '../theme';
 import { ErrorToast, useErrorHandler } from '../components/ErrorDisplay';
 import { notificationService } from '../services/notifications';
+import { clearAllChatHistories } from '../services/chatHistory';
 
 interface Props {
   navigation: any;
@@ -198,6 +203,111 @@ export default function SettingsScreen({ navigation }: Props) {
       await Linking.openURL(url);
     } catch (e) {
       setToastMessage('リンクを開けませんでした');
+    }
+  };
+
+  const handleRequestReview = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+      if (isAvailable) {
+        await StoreReview.requestReview();
+      } else {
+        // Store review not available, open store page directly
+        if (Platform.OS === 'ios') {
+          // Replace with actual App Store ID when published
+          await Linking.openURL('https://apps.apple.com/app/id123456789');
+        } else if (Platform.OS === 'android') {
+          // Replace with actual package name
+          await Linking.openURL('market://details?id=com.dodo.app');
+        } else {
+          setToastMessage('レビュー機能はモバイルアプリでご利用いただけます');
+        }
+      }
+    } catch (e) {
+      setToastMessage('レビューページを開けませんでした');
+    }
+  };
+
+  const handleDeleteConversations = async () => {
+    Alert.alert(
+      '確認',
+      '本当に全ての会話履歴を削除しますか？\nこの操作は取り消せません。',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '削除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await clearAllChatHistories();
+              setToastMessage('会話履歴を削除しました');
+            } catch (e) {
+              setToastMessage('削除に失敗しました');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+
+      // Gather user data for export
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        appVersion: appVersion,
+        user: {
+          name: user.name,
+          email: user.email,
+        },
+        subscription: {
+          plan: subscription.plan,
+          expiresAt: subscription.expiresAt.toISOString(),
+        },
+        settings: {
+          language: language,
+          themeMode: themeMode,
+          notifications: notifications,
+        },
+      };
+
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const fileName = `dodo_export_${new Date().toISOString().split('T')[0]}.json`;
+
+      if (Platform.OS === 'web') {
+        // Web: Download via blob
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        setToastMessage('データをダウンロードしました');
+      } else {
+        // Mobile: Use file system and sharing
+        const file = new File(Paths.cache, fileName);
+        await file.write(jsonString);
+
+        const isSharingAvailable = await Sharing.isAvailableAsync();
+        if (isSharingAvailable) {
+          await Sharing.shareAsync(file.uri, {
+            mimeType: 'application/json',
+            dialogTitle: 'データをエクスポート',
+          });
+        } else {
+          setToastMessage('共有機能が利用できません');
+        }
+      }
+    } catch (e) {
+      setToastMessage('データのエクスポートに失敗しました');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -412,17 +522,14 @@ export default function SettingsScreen({ navigation }: Props) {
             icon="📊"
             title="データのエクスポート"
             subtitle="あなたのデータをダウンロード"
-            onPress={() => setToastMessage('データエクスポート機能は準備中です')}
+            onPress={handleExportData}
             badge="Pro"
           />
           <SettingRow
             icon="🗑️"
             title="会話履歴を削除"
             subtitle="過去のチャット履歴を消去"
-            onPress={() => Alert.alert('確認', '本当に会話履歴を削除しますか？この操作は取り消せません。', [
-              { text: 'キャンセル', style: 'cancel' },
-              { text: '削除', style: 'destructive', onPress: () => setToastMessage('会話履歴を削除しました') }
-            ])}
+            onPress={handleDeleteConversations}
           />
         </View>
 
@@ -433,25 +540,25 @@ export default function SettingsScreen({ navigation }: Props) {
             icon="❓"
             title={t('settings.helpFaq')}
             subtitle="よくある質問と回答"
-            onPress={() => handleOpenLink('https://example.com/help')}
+            onPress={() => handleOpenLink('https://github.com/takumisawano-hash/dodo-demo#readme')}
           />
           <SettingRow
             icon="📧"
             title={t('settings.contact')}
             subtitle="お問い合わせ・フィードバック"
-            onPress={() => handleOpenLink('mailto:support@example.com')}
+            onPress={() => handleOpenLink('mailto:support@getdodo.app')}
           />
           <SettingRow
             icon="📋"
             title={t('settings.terms')}
             subtitle="サービス利用規約"
-            onPress={() => handleOpenLink('https://example.com/terms')}
+            onPress={() => handleOpenLink('https://github.com/takumisawano-hash/dodo-demo/blob/master/legal/terms-of-service-ja.md')}
           />
           <SettingRow
             icon="🔒"
             title={t('settings.privacy')}
             subtitle="プライバシーポリシー"
-            onPress={() => handleOpenLink('https://example.com/privacy')}
+            onPress={() => handleOpenLink('https://github.com/takumisawano-hash/dodo-demo/blob/master/legal/privacy-policy-ja.md')}
           />
         </View>
 
@@ -474,7 +581,7 @@ export default function SettingsScreen({ navigation }: Props) {
             icon="⭐"
             title="アプリを評価"
             subtitle="App Storeでレビューを書く"
-            onPress={() => setToastMessage('レビューページを開きます')}
+            onPress={handleRequestReview}
           />
         </View>
 

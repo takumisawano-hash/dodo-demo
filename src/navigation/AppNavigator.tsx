@@ -20,6 +20,15 @@ const AGENT_MAP: Record<string, { id: string; name: string; role: string; color:
   'money-coach': { id: 'money-coach', name: 'フィンチ', role: 'お金', color: '#4CAF50', emoji: '💰', description: '賢くお金を管理', killerFeature: '支出分析', isSubscribed: false },
   'sleep-coach': { id: 'sleep-coach', name: 'コアラ', role: '睡眠', color: '#90A4AE', emoji: '🐨', description: 'ぐっすり眠れる', killerFeature: '睡眠スコア', isSubscribed: false },
   'mental-coach': { id: 'mental-coach', name: 'スワン', role: 'メンタル', color: '#F48FB1', emoji: '🦢', description: '心の健康ケア', killerFeature: '気分トラッカー', isSubscribed: false },
+  'fitness-coach': { id: 'fitness-coach', name: 'ゴリラ', role: 'フィットネス', color: '#795548', emoji: '🦍', description: '楽しく体を動かす', killerFeature: 'トレーニングメニュー', isSubscribed: false },
+  'career-coach': { id: 'career-coach', name: 'イーグル', role: 'キャリア', color: '#607D8B', emoji: '🦅', description: 'キャリアアップ支援', killerFeature: '面接対策', isSubscribed: false },
+  'study-coach': { id: 'study-coach', name: 'フクロウ', role: '学習', color: '#9E9E9E', emoji: '🦉', description: '効率的な学習法', killerFeature: '学習プラン', isSubscribed: false },
+  'cooking-coach': { id: 'cooking-coach', name: 'ペンギン', role: '料理', color: '#00BCD4', emoji: '🐧', description: '簡単おいしいレシピ', killerFeature: '献立提案', isSubscribed: false },
+  'parenting-coach': { id: 'parenting-coach', name: 'カンガルー', role: '育児', color: '#FF7043', emoji: '🦘', description: '子育ての悩み相談', killerFeature: '成長記録', isSubscribed: false },
+  'romance-coach': { id: 'romance-coach', name: 'フラミンゴ', role: '恋愛', color: '#E91E63', emoji: '🦩', description: '素敵な出会いサポート', killerFeature: 'デートプラン', isSubscribed: false },
+  'organize-coach': { id: 'organize-coach', name: 'ビーバー', role: '整理整頓', color: '#8D6E63', emoji: '🦫', description: 'スッキリ片付け術', killerFeature: '断捨離プラン', isSubscribed: false },
+  'time-coach': { id: 'time-coach', name: 'ハチドリ', role: '時間管理', color: '#00ACC1', emoji: '🐦', description: '時間を味方に', killerFeature: 'スケジュール最適化', isSubscribed: false },
+  'digital-coach': { id: 'digital-coach', name: 'ロボット', role: 'デジタル', color: '#546E7A', emoji: '🤖', description: 'デジタルデトックス', killerFeature: 'スクリーンタイム管理', isSubscribed: false },
 };
 
 export default function AppNavigator() {

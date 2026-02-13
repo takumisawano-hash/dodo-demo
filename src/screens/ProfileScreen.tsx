@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -62,6 +63,8 @@ export default function ProfileScreen({ navigation }: Props) {
   const { colors, isDark } = useTheme();
   const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState<typeof ALL_ACHIEVEMENTS[0] | null>(null);
+  const [avatarImage, setAvatarImage] = useState<string | null>(null);
+  const [avatarEmoji, setAvatarEmoji] = useState<string | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   
   const getInitials = (name: string) => {
@@ -73,20 +76,75 @@ export default function ProfileScreen({ navigation }: Props) {
     ? ALL_ACHIEVEMENTS 
     : ALL_ACHIEVEMENTS.slice(0, 4);
 
+  const pickImageFromCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('許可が必要です', 'カメラを使用するには許可が必要です。設定から許可してください。');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setAvatarImage(result.assets[0].uri);
+      setAvatarEmoji(null);
+    }
+  };
+
+  const pickImageFromLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('許可が必要です', 'フォトライブラリにアクセスするには許可が必要です。設定から許可してください。');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setAvatarImage(result.assets[0].uri);
+      setAvatarEmoji(null);
+    }
+  };
+
+  const selectEmoji = () => {
+    const emojis = ['😀', '😎', '🦤', '🐨', '🦉', '🦜', '🦢', '🐰', '🦊', '🐻', '🐼', '🦁'];
+    Alert.alert(
+      '🎨 絵文字を選択',
+      '好きな絵文字をタップしてください',
+      emojis.map(emoji => ({
+        text: emoji,
+        onPress: () => {
+          setAvatarEmoji(emoji);
+          setAvatarImage(null);
+        },
+      }))
+    );
+  };
+
   const handleEditAvatar = () => {
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
     ]).start();
-    
+
     Alert.alert(
       '📷 プロフィール画像',
       '画像を変更しますか？',
       [
         { text: 'キャンセル', style: 'cancel' },
-        { text: '📸 カメラで撮影', onPress: () => Alert.alert('カメラ', 'カメラ機能は今後実装予定です') },
-        { text: '🖼️ ライブラリから選択', onPress: () => Alert.alert('ライブラリ', 'ライブラリ機能は今後実装予定です') },
-        { text: '🎨 絵文字を選択', onPress: () => Alert.alert('絵文字', '絵文字選択は今後実装予定です') },
+        { text: '📸 カメラで撮影', onPress: pickImageFromCamera },
+        { text: '🖼️ ライブラリから選択', onPress: pickImageFromLibrary },
+        { text: '🎨 絵文字を選択', onPress: selectEmoji },
       ]
     );
   };
@@ -129,7 +187,11 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   const handleViewDetailedStats = () => {
-    navigation.navigate('Stats');
+    Alert.alert(
+      '📊 詳細な統計',
+      'この機能は今後のアップデートで追加予定です！\n\n現在の統計情報はこのページでご確認いただけます。',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleInviteFriends = async () => {
@@ -173,8 +235,12 @@ export default function ProfileScreen({ navigation }: Props) {
         {/* Profile Card */}
         <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
           <Animated.View style={[styles.avatarContainer, { transform: [{ scale: scaleAnim }] }]}>
-            {USER.avatar ? (
-              <Image source={{ uri: USER.avatar }} style={styles.avatar} />
+            {avatarImage ? (
+              <Image source={{ uri: avatarImage }} style={styles.avatar} />
+            ) : avatarEmoji ? (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.emojiAvatar}>{avatarEmoji}</Text>
+              </View>
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>{getInitials(USER.name)}</Text>
@@ -430,6 +496,9 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  emojiAvatar: {
+    fontSize: 50,
   },
   editAvatarButton: {
     position: 'absolute',
